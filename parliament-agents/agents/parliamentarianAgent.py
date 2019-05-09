@@ -27,8 +27,9 @@ class ParliamentarianAgent(Agent):
 
     async def setup(self):
         print("Parliament agent {}".format(str(self.jid)))
+
+    def receive_message_behaviour(self):
         b = self.RecvBehav()
         template = Template()
         template.set_metadata("performative", "inform")
         self.add_behaviour(b, template)
-

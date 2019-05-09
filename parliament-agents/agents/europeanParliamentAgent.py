@@ -10,7 +10,8 @@ class EuropeanParliamentAgent(Agent):
         super().__init__(jid, password)
         self.parliamentarian_agents_JIDs = []
         self.votingSystemId = voting_system_id
-        self.statutes = []
+        self.current_state = []
+        self.state_after_approval = []
         self.messageReaction = {
             "G_P_E_s": self.process_current_state,
             "G_P_E_as": self.process_state_after_approval,
@@ -42,7 +43,7 @@ class EuropeanParliamentAgent(Agent):
 
     def process_set_current_statue(self, msg):
         print("{} Process - set current statue".format(str(self.jid)))
-
+        
     def generate_current_state(self):
         print("{} Generate - current state".format(str(self.jid)))
 

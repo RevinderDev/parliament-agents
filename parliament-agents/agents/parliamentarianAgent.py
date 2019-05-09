@@ -1,8 +1,7 @@
 from spade.agent import Agent
-from spade.behaviour import OneShotBehaviour
-from spade.behaviour import CyclicBehaviour
+from .commonBehaviours import ReceiveBehaviour
+from .commonBehaviours import SendMessageBehaviour
 from spade.template import Template
-from spade.message import Message
 from random import randint
 
 
@@ -30,30 +29,11 @@ class ParliamentarianAgent(Agent):
             "I_V_P_ev": self.process_end_voting
         }
 
-    class ReceiveBehaviour(CyclicBehaviour):
-        async def run(self):
-            msg = await self.receive()
-            if msg:
-                print("{} Message received with content: {}".format(str(self.agent.jid), msg.body))
-                self.agent.parse_message(msg)
-
-    class SendBehaviour(OneShotBehaviour):
-        def __init__(self, receiver, body):
-            super().__init__()
-            self.receiver = receiver
-            self.body = body
-
-        async def run(self):
-            msg = Message(to=self.receiver)  # Instantiate the message
-            msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-            msg.body = self.body  # Set the message content
-            await self.send(msg)
-
     async def setup(self):
         print("Parliament agent {}".format(str(self.jid)))
 
     def receive_message_behaviour(self):
-        b = self.ReceiveBehaviour()
+        b = ReceiveBehaviour()
         template = Template()
         template.set_metadata("performative", "inform")
         self.add_behaviour(b, template)
@@ -127,5 +107,5 @@ class ParliamentarianAgent(Agent):
         # Decide how to vote (now only random)
         vote = randint(0, 1)
         print("{} Vote: {}".format(str(self.jid), vote))
-        b = self.SendBehaviour(self.votingSystemId, "I_P_V_v@" + str(vote))
+        b = SendMessageBehaviour(self.votingSystemId, "I_P_V_v@" + str(vote))
         self.add_behaviour(b)

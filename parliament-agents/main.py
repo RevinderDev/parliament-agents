@@ -20,4 +20,4 @@ if __name__ == '__main__':
         future.result()
         votingSystem.parliamentarian_agents_JIDs.append(parliamentarianAgent.jid)
 
-    votingSystem.send_message(recipient="parliamentarians", message="I_V_P_sv")
+    votingSystem.send_message(recipient="parliamentarians", message_code="I_V_P_sv")

@@ -3,6 +3,7 @@ from spade.behaviour import OneShotBehaviour
 from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
+from random import randint
 
 
 class ParliamentarianAgent(Agent):
@@ -10,22 +11,31 @@ class ParliamentarianAgent(Agent):
 
     def __init__(self, jid, password, voting_system_id, interests):
         super().__init__(jid, password)
+        self.__class__.instance = self
         self.votingSystemId = voting_system_id
         self.interests = interests
         self.id = self.__class__.id_count
         self.__class__.id_count += 1
+        self.messageReaction = {
+            "G/R_P_P_i": self.process_information_about_interests,
+            "G/R_P_P_a": self.process_information_about_attitude,
+            "S_pc": self.process_coalition_proposition,
+            "S_ac": self.process_coalition_acceptation,
+            "S_rc": self.process_coalition_refusal,
+            "R_P_E_s": self.process_current_state,
+            "R_P_E_as": self.process_current_state_after_approval,
+            "R_P_V_cs": self.process_current_statute,
+            "R_P_V_ps": self.process_past_statutes,
+            "I_V_P_sv": self.process_start_voting,
+            "I_V_P_ev": self.process_end_voting
+        }
 
     class ReceiveBehaviour(CyclicBehaviour):
         async def run(self):
             msg = await self.receive()
             if msg:
-                body = msg.body
-                print("{} Message received with content: {}".format(str(self.agent.jid), body))
-                if body == "I_V_P_sv":
-                    self.agent.startVoting()
-
-        async def on_end(self):
-            await self.agent.stop()
+                print("{} Message received with content: {}".format(str(self.agent.jid), msg.body))
+                self.agent.parse_message(msg)
 
     class SendBehaviour(OneShotBehaviour):
         def __init__(self, receiver, body):
@@ -42,14 +52,80 @@ class ParliamentarianAgent(Agent):
     async def setup(self):
         print("Parliament agent {}".format(str(self.jid)))
 
-    def start_voting(self):
-        print("{} Started voting".format(str(self.jid)))
-        # b = self.SendBehaviour(msg.sender, )
-        # self.add_behaviour(b)
-        
     def receive_message_behaviour(self):
         b = self.ReceiveBehaviour()
         template = Template()
         template.set_metadata("performative", "inform")
         self.add_behaviour(b, template)
 
+    def parse_message(self, msg):
+        msg_code = msg.body.split("@")[0]
+        self.messageReaction[msg_code](msg)
+
+    def process_information_about_interests(self, msg):
+        print("{} Answer - interests".format(str(self.jid)))
+
+    def process_information_about_attitude(self, msg):
+        print("{} Answer - attitude".format(str(self.jid)))
+
+    def process_coalition_proposition(self, msg):
+        print("{} Coalition - proposed".format(str(self.jid)))
+
+    def process_coalition_acceptation(self, msg):
+        print("{} Coalition - accepted".format(str(self.jid)))
+
+    def process_coalition_refusal(self, msg):
+        print("{} Coalition - rejected".format(str(self.jid)))
+
+    def process_current_state(self, msg):
+        print("{} Answer - current state".format(str(self.jid)))
+
+    def process_current_state_after_approval(self, msg):
+        print("{} Answer - state after approval".format(str(self.jid)))
+
+    def process_current_statute(self, msg):
+        print("{} Answer - current statute".format(str(self.jid)))
+
+    def process_past_statutes(self, msg):
+        print("{} Answer - past statutes".format(str(self.jid)))
+
+    def process_start_voting(self, msg):
+        print("{} Voting - started".format(str(self.jid)))
+        self.generate_submit_vote()
+
+    def process_end_voting(self, msg):
+        print("{} Voting - ended".format(str(self.jid)))
+
+    def generate_information_about_interests(self):
+        print("{} Ask - interests".format(str(self.jid)))
+
+    def generate_information_about_attitude(self):
+        print("{} Ask - attitude".format(str(self.jid)))
+
+    def generate_coalition_proposition(self):
+        print("{} Coalition - propose".format(str(self.jid)))
+
+    def generate_coalition_acceptation(self):
+        print("{} Coalition - accept".format(str(self.jid)))
+
+    def generate_coalition_refusal(self):
+        print("{} Coalition - reject".format(str(self.jid)))
+
+    def generate_current_state(self):
+        print("{} Ask - current state".format(str(self.jid)))
+
+    def generate_current_state_after_approval(self):
+        print("{} Ask - state after approval".format(str(self.jid)))
+
+    def generate_current_statute(self):
+        print("{} Ask - current statute".format(str(self.jid)))
+
+    def generate_past_statutes(self):
+        print("{} Ask - past statutes".format(str(self.jid)))
+
+    def generate_submit_vote(self):
+        # Decide how to vote (now only random)
+        vote = randint(0, 1)
+        print("{} Vote: {}".format(str(self.jid), vote))
+        b = self.SendBehaviour(self.votingSystemId, "I_P_V_v@" + str(vote))
+        self.add_behaviour(b)

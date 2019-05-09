@@ -7,7 +7,7 @@ if __name__ == '__main__':
         content = f.readlines()
         for line in content:
             line = line.rstrip().split(" ")
-            agents.append(ParliamentarianAgent(line[0], line[1], None))
+            agents.append(ParliamentarianAgent(line[0], line[1], "votingSystem@jabbim.pl", None))
 
     votingSystem = VotingSystemAgent("votingSystem@jabbim.pl", "parlAGH123")
     votingSystem.web.start(hostname="127.0.0.1", port="10002")

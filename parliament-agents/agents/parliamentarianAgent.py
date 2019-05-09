@@ -1,6 +1,5 @@
 from spade.agent import Agent
 from spade.behaviour import OneShotBehaviour
-from spade.message import Message
 from spade.template import Template
 
 
@@ -15,18 +14,19 @@ class ParliamentarianAgent(Agent):
 
     class RecvBehav(OneShotBehaviour):
         async def run(self):
-            print("RecvBehav running")
             msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
             if msg:
                 print("Message received with content: {}".format(msg.body))
             else:
                 print("Did not received any message after 10 seconds")
+                self.kill()
             # stop agent from behaviour
-            self.agent.stop()
 
-    def setup(self):
-        print("Agent {}".format(str(self.jid)))
-        print("ReceiverAgent started")
+        async def on_end(self):
+            await self.agent.stop()
+
+    async def setup(self):
+        print("Parliament agent {}".format(str(self.jid)))
         b = self.RecvBehav()
         template = Template()
         template.set_metadata("performative", "inform")

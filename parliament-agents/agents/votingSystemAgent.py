@@ -13,10 +13,10 @@ class VotingSystemAgent(Agent):
     def __init__(self, jid, password):
         super().__init__(jid, password)
         self.parliamentarian_agents_JIDs = []
-        self.code_messages = {
-            "R_P_V_cs": self.generate_current_statue,
-            "R_P_V_ps": self.generate_previous_state,
-            "I_V_P_v": self.generate_future_union_state,
+        self.messageReaction = {
+            "G_P_V_cs": self.process_current_statue,
+            "G_P_V_ps": self.process_past_statutes,
+            "I_P_V_v": self.process_submit_vote,
         }
 
     def receive_message_behaviour(self):
@@ -27,7 +27,7 @@ class VotingSystemAgent(Agent):
 
     def parse_message(self, msg):
         msg_code = msg.body.split("@")[0]
-        response = self.code_messages[msg_code]()
+        self.messageReaction[msg_code](msg)
         # msg_behaviour = SendMessageBehaviour(msg._sender, msg_code.join(response))
         # self.add_behaviour(msg_behaviour)
 
@@ -37,27 +37,32 @@ class VotingSystemAgent(Agent):
                 msg_behaviour = SendMessageBehaviour(jid, message_code)
                 self.add_behaviour(msg_behaviour)
 
-    def generate_current_statue(self):
-        print("{} Answer - current state".format(str(self.jid)))
-        return "CurrentState"
+    def process_current_statue(self, msg):
+        print("{} Process - current state".format(str(self.jid)))
+        self.generate_current_statute()
 
-    def generate_previous_state(self):
-        print("{} Answer - previous state".format(str(self.jid)))
-        return "PreviousState"
+    def process_past_statutes(self, msg):
+        print("{} Process- previous state".format(str(self.jid)))
+        self.generate_past_statutes()
 
-    def generate_future_union_state(self):
-        print("{} Answer - calculate future union state".format(str(self.jid)))
-        return "TestFutureUnion"
+    def process_submit_vote(self, msg):
+        print("Process {} actualize vote".format(str(self.jid)))
 
-    def start_vote(self):
-        print("{} start voting".format(str(self.jid)))
+    def generate_current_statute(self, msg):
+        print("{} Generate - current state".format(str(self.jid)))
+
+    def generate_past_statutes(self):
+        print("{} Generate - previous state".format(str(self.jid)))
+
+    def generate_set_current_statute(self):
+        print("{} Generate - set current statute".format(str(self.jid)))
+
+    def generate_start_voting(self):
+        print("Generate {} start voting".format(str(self.jid)))
         self.send_message(recipient="parliamentarians", message_code="I_V_P_sv")
 
-    def actualize_vote(self):
-        print("{} actualize vote".format(str(self.jid)))
+    def generate_end_voting(self):
+        print("Generate {} end vote".format(str(self.jid)))
 
-    def end_vote(self):
-        print("{} end vote".format(str(self.jid)))
-
-    def apply_current_statue(self):
-        print("{} apply statue".format(str(self.jid)))
+    def generate_apply_statue(self):
+        print("Generate {} apply statue".format(str(self.jid)))

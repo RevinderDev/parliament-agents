@@ -43,7 +43,7 @@ class EuropeanParliamentAgent(Agent):
 
     def process_set_current_statue(self, msg):
         print("{} Process - set current statue".format(str(self.jid)))
-        
+
     def generate_current_state(self):
         print("{} Generate - current state".format(str(self.jid)))
 

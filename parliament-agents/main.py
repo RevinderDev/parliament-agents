@@ -13,6 +13,7 @@ if __name__ == '__main__':
     votingSystem = VotingSystemAgent("votingSystem@jabbim.pl", "parlAGH123")
     votingSystem.web.start(hostname="127.0.0.1", port="10002")
     votingSystem.start()
+    votingSystem.receive_message_behaviour()
 
     europeanParliament = EuropeanParliamentAgent("EuropeanParliamentAgent@jabbim.pl", "parlAGH123", "votingSystem@jabbim.pl")
     europeanParliament.web.start(hostname="127.0.0.1", port="10003")
@@ -27,5 +28,4 @@ if __name__ == '__main__':
         votingSystem.parliamentarian_agents_JIDs.append(parliamentarianAgent.jid)
         europeanParliament.parliamentarian_agents_JIDs.append(parliamentarianAgent.jid)
 
-    votingSystem.receive_message_behaviour()
-    votingSystem.start_vote()
+    votingSystem.generate_start_voting()

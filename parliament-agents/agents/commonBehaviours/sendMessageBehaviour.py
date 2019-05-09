@@ -14,5 +14,5 @@ class SendMessageBehaviour(OneShotBehaviour):
         msg.body = self.message_body
         await self.send(msg)
 
-    async def on_end(self):
-        await self.agent.stop()
+    # async def on_end(self):
+    #     await self.agent.stop()

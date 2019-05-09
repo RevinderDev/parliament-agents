@@ -22,7 +22,7 @@ class VotingSystemAgent(Agent):
     def receive_message_behaviour(self):
         b = ReceiveBehaviour()
         template = Template()
-        template.set_metadata("performative", "inform") #TODO: Problem z odbieraniem czy co?
+        template.set_metadata("performative", "inform")
         self.add_behaviour(b, template)
 
     def parse_message(self, msg):

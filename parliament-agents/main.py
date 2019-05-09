@@ -27,4 +27,5 @@ if __name__ == '__main__':
         votingSystem.parliamentarian_agents_JIDs.append(parliamentarianAgent.jid)
         europeanParliament.parliamentarian_agents_JIDs.append(parliamentarianAgent.jid)
 
-    votingSystem.send_message(recipient="parliamentarians", message_code="I_V_P_sv")
+    votingSystem.receive_message_behaviour()
+    votingSystem.start_vote()

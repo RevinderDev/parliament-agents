@@ -10,7 +10,6 @@ class ParliamentarianAgent(Agent):
 
     def __init__(self, jid, password, voting_system_id, interests):
         super().__init__(jid, password)
-        self.__class__.instance = self
         self.votingSystemId = voting_system_id
         self.interests = interests
         self.id = self.__class__.id_count
@@ -30,7 +29,7 @@ class ParliamentarianAgent(Agent):
         }
 
     async def setup(self):
-        print("Parliament agent {}".format(str(self.jid)))
+        print("ParliamentarianAgent {}".format(str(self.jid)))
 
     def receive_message_behaviour(self):
         b = ReceiveBehaviour()
@@ -43,65 +42,65 @@ class ParliamentarianAgent(Agent):
         self.messageReaction[msg_code](msg)
 
     def process_information_about_interests(self, msg):
-        print("{} Answer - interests".format(str(self.jid)))
+        print("{} Process - interests".format(str(self.jid)))
 
     def process_information_about_attitude(self, msg):
-        print("{} Answer - attitude".format(str(self.jid)))
+        print("{} Process - attitude".format(str(self.jid)))
 
     def process_coalition_proposition(self, msg):
-        print("{} Coalition - proposed".format(str(self.jid)))
+        print("{} Process Coalition - proposed".format(str(self.jid)))
 
     def process_coalition_acceptation(self, msg):
-        print("{} Coalition - accepted".format(str(self.jid)))
+        print("{} Process Coalition - accepted".format(str(self.jid)))
 
     def process_coalition_refusal(self, msg):
-        print("{} Coalition - rejected".format(str(self.jid)))
+        print("{} Process Coalition - rejected".format(str(self.jid)))
 
     def process_current_state(self, msg):
-        print("{} Answer - current state".format(str(self.jid)))
+        print("{} Process - current state".format(str(self.jid)))
 
     def process_current_state_after_approval(self, msg):
-        print("{} Answer - state after approval".format(str(self.jid)))
+        print("{} Process - state after approval".format(str(self.jid)))
 
     def process_current_statute(self, msg):
-        print("{} Answer - current statute".format(str(self.jid)))
+        print("{} Process - current statute".format(str(self.jid)))
 
     def process_past_statutes(self, msg):
-        print("{} Answer - past statutes".format(str(self.jid)))
+        print("{} Process - past statutes".format(str(self.jid)))
 
     def process_start_voting(self, msg):
-        print("{} Voting - started".format(str(self.jid)))
+        print("{} Process Voting - started".format(str(self.jid)))
         self.generate_submit_vote()
 
     def process_end_voting(self, msg):
-        print("{} Voting - ended".format(str(self.jid)))
+        print("{} Process Voting - ended".format(str(self.jid)))
 
     def generate_information_about_interests(self):
-        print("{} Ask - interests".format(str(self.jid)))
+        print("{} Generate - interests".format(str(self.jid)))
 
     def generate_information_about_attitude(self):
-        print("{} Ask - attitude".format(str(self.jid)))
+        print("{} Generate - attitude".format(str(self.jid)))
 
     def generate_coalition_proposition(self):
-        print("{} Coalition - propose".format(str(self.jid)))
+        print("{} Generate Coalition - propose".format(str(self.jid)))
 
     def generate_coalition_acceptation(self):
-        print("{} Coalition - accept".format(str(self.jid)))
+        print("{} Generate Coalition - accept".format(str(self.jid)))
 
     def generate_coalition_refusal(self):
-        print("{} Coalition - reject".format(str(self.jid)))
+        print("{} Generate Coalition - reject".format(str(self.jid)))
 
     def generate_current_state(self):
-        print("{} Ask - current state".format(str(self.jid)))
+        print("{} Generate - current state".format(str(self.jid)))
 
     def generate_current_state_after_approval(self):
-        print("{} Ask - state after approval".format(str(self.jid)))
+        print("{} Generate - state after approval".format(str(self.jid)))
 
     def generate_current_statute(self):
-        print("{} Ask - current statute".format(str(self.jid)))
+        print("{} Generate - current statute".format(str(self.jid)))
 
     def generate_past_statutes(self):
-        print("{} Ask - past statutes".format(str(self.jid)))
+        print("{} Generate - past statutes".format(str(self.jid)))
 
     def generate_submit_vote(self):
         # Decide how to vote (now only random)

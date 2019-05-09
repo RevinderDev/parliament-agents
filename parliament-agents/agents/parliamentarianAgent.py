@@ -42,13 +42,14 @@ class ParliamentarianAgent(Agent):
     async def setup(self):
         print("Parliament agent {}".format(str(self.jid)))
 
-        # Receive (cyclic)
+    def start_voting(self):
+        print("{} Started voting".format(str(self.jid)))
+        # b = self.SendBehaviour(msg.sender, )
+        # self.add_behaviour(b)
+        
+    def receive_message_behaviour(self):
         b = self.ReceiveBehaviour()
         template = Template()
         template.set_metadata("performative", "inform")
         self.add_behaviour(b, template)
 
-    def start_voting(self):
-        print("{} Started voting".format(str(self.jid)))
-        # b = self.SendBehaviour(msg.sender, )
-        # self.add_behaviour(b)

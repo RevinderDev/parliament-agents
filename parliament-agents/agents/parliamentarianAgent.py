@@ -15,8 +15,8 @@ class ParliamentarianAgent(Agent):
         self.id = self.__class__.id_count
         self.__class__.id_count += 1
         self.messageReaction = {
-            "G/R_P_P_i": self.process_information_about_interests,
-            "G/R_P_P_a": self.process_information_about_attitude,
+            "R_P_P_i": self.process_information_about_interests,
+            "R_P_P_a": self.process_information_about_attitude,
             "S_pc": self.process_coalition_proposition,
             "S_ac": self.process_coalition_acceptation,
             "S_rc": self.process_coalition_refusal,
@@ -30,6 +30,7 @@ class ParliamentarianAgent(Agent):
 
     async def setup(self):
         print("ParliamentarianAgent {}".format(str(self.jid)))
+        print("Interests: ", self.interests, "\n")
 
     def receive_message_behaviour(self):
         b = ReceiveBehaviour()

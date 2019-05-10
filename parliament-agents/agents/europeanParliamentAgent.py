@@ -6,11 +6,11 @@ from spade.template import Template
 
 class EuropeanParliamentAgent(Agent):
 
-    def __init__(self, jid, password, voting_system_id):
+    def __init__(self, jid, password, voting_system_id, state):
         super().__init__(jid, password)
         self.parliamentarian_agents_JIDs = []
         self.votingSystemId = voting_system_id
-        self.current_state = []
+        self.current_state = state
         self.state_after_approval = []
         self.messageReaction = {
             "G_P_E_s": self.process_current_state,
@@ -21,6 +21,7 @@ class EuropeanParliamentAgent(Agent):
 
     async def setup(self):
         print("EuropeanParliamentAgent {}".format(str(self.jid)))
+        print("State: ", self.current_state, "\n")
 
     def receive_message_behaviour(self):
         b = ReceiveBehaviour()
@@ -32,11 +33,18 @@ class EuropeanParliamentAgent(Agent):
         msg_code = msg.body.split("@")[0]
         self.messageReaction[msg_code](msg)
 
+    def set_current_state(self, state):
+        self.current_state = state
+        print("New state: ", state, "\n")
+
+    def calculate_state_after_approval(self, statute):
+        pass
+
     def process_current_state(self, msg):
         print("{} Process - current state".format(str(self.jid)))
 
     def process_state_after_approval(self, msg):
-        print("{} Process - state after aproval".format(str(self.jid)))
+        print("{} Process - state after approval".format(str(self.jid)))
 
     def process_apply_statue(self, msg):
         print("{} Process - apply statue".format(str(self.jid)))
@@ -48,4 +56,4 @@ class EuropeanParliamentAgent(Agent):
         print("{} Generate - current state".format(str(self.jid)))
 
     def generate_state_after_approval(self):
-        print("{} Generate - state after aproval".format(str(self.jid)))
+        print("{} Generate - state after approval".format(str(self.jid)))

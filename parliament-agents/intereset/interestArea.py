@@ -1,5 +1,20 @@
 class InterestArea:
-    def __init__(self, name, attitude_right, attitude_left):
+    def __init__(self, name, attitude_left, attitude_right):
         self.name = name
-        self.attitudeRight = attitude_right
         self.attitudeLeft = attitude_left
+        self.attitudeRight = attitude_right
+
+    def __str__(self):
+        return "[INTEREST_AREA: name = " + self.name + ", left = " + self.attitudeLeft + ", right = " \
+               + self.attitudeRight + "]"
+
+    def __repr__(self):
+        return "[INTEREST_AREA: name = " + self.name + "]"
+
+    def __hash__(self):
+        return hash((self.name, self.attitudeLeft, self.attitudeRight))
+
+    def __eq__(self, other):
+        return (self.name, self.attitudeLeft, self.attitudeRight) == \
+               (other.name, other.attitudeLeft, other.attitudeRight)
+

@@ -7,12 +7,12 @@ from .commonBehaviours import SendMessageBehaviour
 
 class VotingSystemAgent(Agent):
     async def setup(self):
-        print("Voting system agent starts")
-        self.presence.set_available()
+        print("VotingSystemAgent {}".format(str(self.jid)), "\n")
 
     def __init__(self, jid, password):
         super().__init__(jid, password)
         self.parliamentarian_agents_JIDs = []
+        self.current_statute = None
         self.messageReaction = {
             "G_P_V_cs": self.process_current_statue,
             "G_P_V_ps": self.process_past_statutes,
@@ -30,6 +30,10 @@ class VotingSystemAgent(Agent):
         self.messageReaction[msg_code](msg)
         # msg_behaviour = SendMessageBehaviour(msg._sender, msg_code.join(response))
         # self.add_behaviour(msg_behaviour)
+
+    def set_current_statute(self, statute):
+        self.current_statute = statute
+        print("Statute: ", statute, "\n")
 
     def send_message(self, recipient, message_code):
         if recipient == "parliamentarians":

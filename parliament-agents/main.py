@@ -69,10 +69,10 @@ class Simulation:
 
     def start_voting(self, file_name_statute):
         # TODO Load or set (now random statute)
-        statute = []
+        statute_interests = []
         for interestArea in self.interestsAreas:
-            statute.append(Interest(interestArea, randint(1, 20), randint(1, 5)))
-        self.votingSystem.set_current_statute(statute)
+            statute_interests.append(Interest(interestArea, randint(1, 20), randint(1, 5)))
+        self.votingSystem.set_current_statute(Statute(statute_interests))
         self.votingSystem.generate_start_voting()
 
 

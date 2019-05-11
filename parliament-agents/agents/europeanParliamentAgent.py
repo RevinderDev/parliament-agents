@@ -2,16 +2,17 @@ from spade.agent import Agent
 from .commonBehaviours import ReceiveBehaviour
 from .commonBehaviours import SendMessageBehaviour
 from spade.template import Template
+from statute import Statute
 
 
 class EuropeanParliamentAgent(Agent):
 
     def __init__(self, jid, password, voting_system_id, state):
         super().__init__(jid, password)
-        self.parliamentarian_agents_JIDs = []
+        self.parliamentarianAgentsJIDs = []
         self.votingSystemId = voting_system_id
-        self.current_state = state
-        self.state_after_approval = []
+        self.currentState = state
+        self.stateAfterApproval = {}
         self.messageReaction = {
             "G_P_E_s": self.process_current_state,
             "G_P_E_as": self.process_state_after_approval,
@@ -20,8 +21,8 @@ class EuropeanParliamentAgent(Agent):
         }
 
     async def setup(self):
-        print("EuropeanParliamentAgent {}".format(str(self.jid)))
-        print("State: ", self.current_state, "\n")
+        print("{} EuropeanParliamentAgent setup".format(str(self.jid)))
+        print("\tState: ", str(self.currentState), "\n")
 
     def receive_message_behaviour(self):
         b = ReceiveBehaviour()
@@ -34,26 +35,37 @@ class EuropeanParliamentAgent(Agent):
         self.messageReaction[msg_code](msg)
 
     def set_current_state(self, state):
-        self.current_state = state
-        print("New state: ", state, "\n")
+        self.currentState = state
+        print("\tNew state: ", str(state), "\n")
 
     def calculate_state_after_approval(self, statute):
-        pass
+        # TODO calculate
+        self.stateAfterApproval = self.currentState
+        print("\tState after approval: " + str(self.stateAfterApproval))
 
     def process_current_state(self, msg):
         print("{} Process - current state".format(str(self.jid)))
+        self.generate_current_state(msg.sender)
 
     def process_state_after_approval(self, msg):
         print("{} Process - state after approval".format(str(self.jid)))
+        self.generate_state_after_approval(msg.sender)
 
     def process_apply_statue(self, msg):
-        print("{} Process - apply statue".format(str(self.jid)))
+        print("{} Process - apply statute".format(str(self.jid)))
+        self.currentState = self.stateAfterApproval
 
     def process_set_current_statue(self, msg):
-        print("{} Process - set current statue".format(str(self.jid)))
+        print("{} Process - set current statute".format(str(self.jid)))
+        statute = Statute.str_to_statute(str(msg.body).split("@")[1])
+        self.calculate_state_after_approval(statute)
 
-    def generate_current_state(self):
+    def generate_current_state(self, recipient):
         print("{} Generate - current state".format(str(self.jid)))
+        b = SendMessageBehaviour(recipient, "R_P_E_s@" + str(self.currentState))
+        self.add_behaviour(b)
 
-    def generate_state_after_approval(self):
+    def generate_state_after_approval(self, recipient):
         print("{} Generate - state after approval".format(str(self.jid)))
+        b = SendMessageBehaviour(recipient, "R_P_E_as@" + str(self.stateAfterApproval))
+        self.add_behaviour(b)

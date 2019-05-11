@@ -29,8 +29,8 @@ class ParliamentarianAgent(Agent):
         }
 
     async def setup(self):
-        print("ParliamentarianAgent {}".format(str(self.jid)))
-        print("Interests: ", self.interests, "\n")
+        print("{} ParliamentarianAgent setup".format(str(self.jid)))
+        print("\tInterests: ", self.interests, "\n")
 
     def receive_message_behaviour(self):
         b = ReceiveBehaviour()
@@ -44,68 +44,87 @@ class ParliamentarianAgent(Agent):
 
     def process_information_about_interests(self, msg):
         print("{} Process - interests".format(str(self.jid)))
+        # TODO analyze information received
 
     def process_information_about_attitude(self, msg):
         print("{} Process - attitude".format(str(self.jid)))
+        # TODO analyze information received
 
     def process_coalition_proposition(self, msg):
-        print("{} Process Coalition - proposed".format(str(self.jid)))
+        print("{} Process - coalition proposition".format(str(self.jid)))
+        # TODO analyze proposition and send response
 
     def process_coalition_acceptation(self, msg):
-        print("{} Process Coalition - accepted".format(str(self.jid)))
+        print("{} Process - coalition acceptation".format(str(self.jid)))
+        # TODO analyze information received
 
     def process_coalition_refusal(self, msg):
-        print("{} Process Coalition - rejected".format(str(self.jid)))
+        print("{} Process - coalition refusal".format(str(self.jid)))
+        # TODO analyze information received
 
     def process_current_state(self, msg):
         print("{} Process - current state".format(str(self.jid)))
+        # TODO analyze information received
 
     def process_current_state_after_approval(self, msg):
         print("{} Process - state after approval".format(str(self.jid)))
+        # TODO analyze information received
 
     def process_current_statute(self, msg):
         print("{} Process - current statute".format(str(self.jid)))
+        # TODO analyze information received
 
     def process_past_statutes(self, msg):
         print("{} Process - past statutes".format(str(self.jid)))
 
     def process_start_voting(self, msg):
-        print("{} Process Voting - started".format(str(self.jid)))
+        print("{} Process - start voting".format(str(self.jid)))
+        # TODO generate some actions to create coalition
         self.generate_submit_vote()
 
     def process_end_voting(self, msg):
-        print("{} Process Voting - ended".format(str(self.jid)))
+        print("{} Process - end voting".format(str(self.jid)))
+        # TODO ask about results and actualize information
 
     def generate_information_about_interests(self):
         print("{} Generate - interests".format(str(self.jid)))
+        # TODO send
 
     def generate_information_about_attitude(self):
         print("{} Generate - attitude".format(str(self.jid)))
+        # TODO send
 
     def generate_coalition_proposition(self):
         print("{} Generate Coalition - propose".format(str(self.jid)))
+        # TODO send
 
     def generate_coalition_acceptation(self):
         print("{} Generate Coalition - accept".format(str(self.jid)))
+        # TODO send
 
     def generate_coalition_refusal(self):
         print("{} Generate Coalition - reject".format(str(self.jid)))
+        # TODO send
 
     def generate_current_state(self):
         print("{} Generate - current state".format(str(self.jid)))
+        # TODO send
 
     def generate_current_state_after_approval(self):
         print("{} Generate - state after approval".format(str(self.jid)))
+        # TODO send
 
     def generate_current_statute(self):
         print("{} Generate - current statute".format(str(self.jid)))
+        # TODO send
 
     def generate_past_statutes(self):
         print("{} Generate - past statutes".format(str(self.jid)))
+        # TODO send
 
     def generate_submit_vote(self):
-        # Decide how to vote (now only random)
-        vote = randint(0, 1)
-        print("{} Vote: {}".format(str(self.jid), vote))
+        print("{} Generate - submit vote".format(str(self.jid)))
+        vote = randint(0, 1)  # TODO Decide how to vote (now only random)
+        print("\tVote: " + str(vote))
         b = SendMessageBehaviour(self.votingSystemId, "I_P_V_v@" + str(vote))
         self.add_behaviour(b)

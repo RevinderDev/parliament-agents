@@ -5,8 +5,8 @@ class InterestArea:
         self.attitudeRight = attitude_right
 
     def __str__(self):
-        return "[INTEREST_AREA: name = " + self.name + ", left = " + self.attitudeLeft + ", right = " \
-               + self.attitudeRight + "]"
+        return "[INTEREST_AREA: name = " + self.name + ", left = " + str(self.attitudeLeft) + ", right = " \
+               + str(self.attitudeRight) + "]"
 
     def __repr__(self):
         return "[INTEREST_AREA: name = " + self.name + "]"

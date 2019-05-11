@@ -7,12 +7,14 @@ from .commonBehaviours import SendMessageBehaviour
 
 class VotingSystemAgent(Agent):
     async def setup(self):
-        print("VotingSystemAgent {}".format(str(self.jid)), "\n")
+        print("{} VotingSystemAgent setup".format(str(self.jid)), "\n")
 
-    def __init__(self, jid, password):
+    def __init__(self, jid, password, european_parliament_jid):
         super().__init__(jid, password)
-        self.parliamentarian_agents_JIDs = []
-        self.current_statute = None
+        self.parliamentarianAgentsJIDs = []
+        self.europeanParliamentJID = european_parliament_jid
+        self.currentStatute = None
+        self.votes = {}
         self.messageReaction = {
             "G_P_V_cs": self.process_current_statue,
             "G_P_V_ps": self.process_past_statutes,
@@ -28,45 +30,61 @@ class VotingSystemAgent(Agent):
     def parse_message(self, msg):
         msg_code = msg.body.split("@")[0]
         self.messageReaction[msg_code](msg)
-        # msg_behaviour = SendMessageBehaviour(msg._sender, msg_code.join(response))
-        # self.add_behaviour(msg_behaviour)
 
     def set_current_statute(self, statute):
-        self.current_statute = statute
-        print("Statute: ", statute, "\n")
+        self.currentStatute = statute
+        print("\tStatute: ", str(statute), "\n")
 
-    def send_message(self, recipient, message_code):
+    def send_message(self, recipient, message):
         if recipient == "parliamentarians":
-            for jid in self.parliamentarian_agents_JIDs:
-                msg_behaviour = SendMessageBehaviour(jid, message_code)
+            for jid in self.parliamentarianAgentsJIDs:
+                msg_behaviour = SendMessageBehaviour(jid, message)
                 self.add_behaviour(msg_behaviour)
+        else:
+            msg_behaviour = SendMessageBehaviour(recipient, message)
+            self.add_behaviour(msg_behaviour)
 
     def process_current_statue(self, msg):
         print("{} Process - current state".format(str(self.jid)))
-        self.generate_current_statute()
+        self.generate_current_statute(msg.sender)
 
     def process_past_statutes(self, msg):
         print("{} Process- previous state".format(str(self.jid)))
         self.generate_past_statutes()
 
     def process_submit_vote(self, msg):
-        print("Process {} actualize vote".format(str(self.jid)))
+        print("{} Process - actualize vote".format(str(self.jid)))
+        print("\tNew vote: : {} - {}".format(str(msg.sender), str(msg.body.split("@")[1])))
+        self.votes[str(msg.sender)] = int(str(msg.body).split("@")[1])
+        if len(self.votes) == len(self.parliamentarianAgentsJIDs):
+            self.generate_end_voting()
 
-    def generate_current_statute(self, msg):
+    def generate_current_statute(self, sender):
         print("{} Generate - current state".format(str(self.jid)))
+        self.send_message(recipient=sender, message="R_P_V_cs@" + str(self.currentStatute))
 
     def generate_past_statutes(self):
         print("{} Generate - previous state".format(str(self.jid)))
+        # TODO
 
     def generate_set_current_statute(self):
         print("{} Generate - set current statute".format(str(self.jid)))
+        self.send_message(recipient=self.europeanParliamentJID, message="I_V_E_ss@" + str(self.currentStatute))
 
     def generate_start_voting(self):
-        print("Generate {} start voting".format(str(self.jid)))
-        self.send_message(recipient="parliamentarians", message_code="I_V_P_sv")
+        print("{} Generate - start voting".format(str(self.jid)))
+        self.votes = {}
+        self.generate_set_current_statute()
+        self.send_message(recipient="parliamentarians", message="I_V_P_sv")
 
     def generate_end_voting(self):
-        print("Generate {} end vote".format(str(self.jid)))
+        print("{} Generate - end voting".format(str(self.jid)))
+        self.send_message(recipient="parliamentarians", message="I_V_P_ev")
+        votes_summary = sum(self.votes.values())
+        print("\tVotes summary: {}/{}".format(str(votes_summary), str(len(self.parliamentarianAgentsJIDs))))
+        if votes_summary >= len(self.parliamentarianAgentsJIDs)/2:
+            self.generate_apply_statue()
 
     def generate_apply_statue(self):
-        print("Generate {} apply statue".format(str(self.jid)))
+        print("{} Generate - apply statute".format(str(self.jid)))
+        self.send_message(recipient=self.europeanParliamentJID, message="I_V_E_as")

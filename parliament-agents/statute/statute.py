@@ -1,4 +1,5 @@
 from interest.interest import Interest
+from interest.interestArea import InterestArea
 import json
 
 
@@ -14,7 +15,7 @@ class Statute:
         self.interests = interests
 
     def __str__(self):
-        return "[STATUTE: id = " + str(self.id) + ", interests = [" + " ".join([str(i) for i in self.interests]) + "]]"
+        return "[STATUTE: id = " + str(self.id) + ", interests = [" + " ".join([str(i) for k, i in self.interests.items()]) + "]]"
 
     def __repr__(self):
         return "[STATUTE: id = " + str(self.id) + "]"
@@ -22,7 +23,8 @@ class Statute:
     @staticmethod
     def str_to_statute(string):
         id_set = int(string.split("id = ")[1].split(",")[0])
-        interests = []
+        interests = {}
         for s in string.split("interests = ")[1].split("INTEREST: ")[1:]:
-            interests.append(Interest.str_to_interest(s.replace(']', '').replace('[', '')))
+            interest = Interest.str_to_interest(s.replace(']', '').replace('[', ''))
+            interests[InterestArea(interest.interestAreaName, "", "")] = interest
         return Statute(interests, id_set)

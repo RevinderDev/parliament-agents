@@ -12,9 +12,8 @@ class InterestArea:
         return "[INTEREST_AREA: name = " + self.name + "]"
 
     def __hash__(self):
-        return hash((self.name, self.attitudeLeft, self.attitudeRight))
+        return hash(self.name)
 
     def __eq__(self, other):
-        return (self.name, self.attitudeLeft, self.attitudeRight) == \
-               (other.name, other.attitudeLeft, other.attitudeRight)
+        return (self.name) == (other.name)
 

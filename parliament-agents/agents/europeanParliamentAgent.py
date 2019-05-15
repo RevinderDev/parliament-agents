@@ -39,8 +39,15 @@ class EuropeanParliamentAgent(Agent):
         print("\tNew state: ", str(state), "\n")
 
     def calculate_state_after_approval(self, statute):
-        # TODO calculate
-        self.stateAfterApproval = self.currentState
+        self.stateAfterApproval = {}
+        for interestArea in self.currentState:
+            if interestArea in statute.interests:
+                self.stateAfterApproval[interestArea] = \
+                    (self.currentState[interestArea] + statute.interests[interestArea].attitude * statute.interests[interestArea].strength)/ \
+                    (1 + statute.interests[interestArea].strength)
+                print(self.stateAfterApproval[interestArea], self.currentState[interestArea], statute.interests[interestArea])
+            else:
+                self.stateAfterApproval[interestArea] = self.currentState[interestArea]
         print("\tState after approval: " + str(self.stateAfterApproval))
 
     def process_current_state(self, msg):

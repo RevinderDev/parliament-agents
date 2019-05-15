@@ -34,10 +34,10 @@ class Simulation:
         with open(file_name) as f:
             content = f.readlines()
             for line in content:
-                interests = []
+                interests = {}
                 # TODO Load (now random interests)
                 for interestArea in self.interestsAreas:
-                    interests.append(Interest(interestArea.name, randint(1, 20), randint(1, 5)))
+                    interests[interestArea] = Interest(interestArea.name, randint(1, 20), randint(1, 5))
                 line = line.rstrip().split(" ")
                 agent = ParliamentarianAgent(line[0], line[1], "votingSystem@jabbim.pl", interests)
                 future = agent.start()
@@ -70,9 +70,9 @@ class Simulation:
 
     def start_voting(self, file_name_statute):
         # TODO Load or set (now random statute)
-        statute_interests = []
+        statute_interests = {}
         for interestArea in self.interestsAreas:
-            statute_interests.append(Interest(interestArea.name, randint(1, 20), randint(1, 5)))
+            statute_interests[interestArea] = Interest(interestArea.name, randint(1, 20), randint(1, 5))
         self.votingSystem.set_current_statute(Statute(statute_interests))
         self.votingSystem.generate_start_voting()
 

@@ -15,8 +15,10 @@ class ParliamentarianAgent(Agent):
         self.id = self.__class__.id_count
         self.__class__.id_count += 1
         self.messageReaction = {
-            "R_P_P_i": self.process_information_about_interests,
-            "R_P_P_a": self.process_information_about_attitude,
+            "G_P_P_i": self.process_information_about_interests,
+            "G_P_P_a": self.process_information_about_attitude,
+            "R_P_P_i": self.process_response_information_about_interests,
+            "R_P_P_a": self.process_response_information_about_attitude,
             "S_pc": self.process_coalition_proposition,
             "S_ac": self.process_coalition_acceptation,
             "S_rc": self.process_coalition_refusal,
@@ -49,6 +51,12 @@ class ParliamentarianAgent(Agent):
     def process_information_about_attitude(self, msg):
         print("{} Process - attitude".format(str(self.jid)))
         # TODO analyze information received
+
+    def process_response_information_about_interests(self, msg):
+        print("{} Process - interests".format(str(self.jid)))
+
+    def process_response_information_about_attitude(self, msg):
+        print("{} Process - attitude".format(str(self.jid)))
 
     def process_coalition_proposition(self, msg):
         print("{} Process - coalition proposition".format(str(self.jid)))

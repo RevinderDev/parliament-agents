@@ -1,5 +1,5 @@
 class VoterDescription:
-    def __init__(self, jid, strength, interests=[], debt=0):
+    def __init__(self, jid, strength, interests={}, debt=0):
         self.jid = jid
         self.strength = strength
         self.interests = interests

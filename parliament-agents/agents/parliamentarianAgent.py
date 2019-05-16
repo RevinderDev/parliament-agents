@@ -5,6 +5,7 @@ from spade.template import Template
 from random import randint
 from math import sqrt
 from state import UnionState, VoterDescription
+from interest import Interest, InterestArea
 
 
 class ParliamentarianAgent(Agent):
@@ -51,6 +52,14 @@ class ParliamentarianAgent(Agent):
 
     def process_information_about_interests(self, msg):
         print("{} Process - interests".format(str(self.jid)))
+        interests_of = int(msg.body.split("@")[1])
+        response = "R_P_P_i@" + str(interests_of) + "@"
+        if interests_of == self.id:
+            response += " ".join([str(i) for k, i in self.interests.items()])
+        else:
+            response += " ".join([str(i) for k, i in self.voters[interests_of].interests.items()])
+        b = SendMessageBehaviour(msg.sender, response)
+        self.add_behaviour(b)
         # TODO analyze information received
 
     def process_information_about_attitude(self, msg):
@@ -59,6 +68,13 @@ class ParliamentarianAgent(Agent):
 
     def process_response_information_about_interests(self, msg):
         print("{} Process - interests".format(str(self.jid)))
+        split = msg.body.split("@")
+        interests_of = int(split[1])
+        interests = {}
+        for s in split[2].split("INTEREST: ")[1:]:
+            interest = Interest.str_to_interest(s.replace(']', '').replace('[', ''))
+            interests[InterestArea(interest.interestAreaName, "", "")] = interest
+        self.voters[interests_of].interests = interests
 
     def process_response_information_about_attitude(self, msg):
         print("{} Process - attitude".format(str(self.jid)))
@@ -101,6 +117,9 @@ class ParliamentarianAgent(Agent):
         self.unionStateAfterApproval = None
         self.generate_get_current_state()
         self.generate_get_state_after_approval()
+        for id, v in self.voters.items():
+            if len(v.interests) == 0 and id != self.id:
+                self.generate_information_about_interests(self.voters_id_to_address[id], id)
 
     def generate_get_current_state(self):
         print("{} Generate - get current Union state".format(str(self.jid)))
@@ -116,8 +135,10 @@ class ParliamentarianAgent(Agent):
         print("{} Process - end voting".format(str(self.jid)))
         # TODO ask about results and actualize information
 
-    def generate_information_about_interests(self):
-        print("{} Generate - interests".format(str(self.jid)))
+    def generate_information_about_interests(self, asked, interests_of):
+        print("{} Generate - interests of {}, asked {}".format(str(self.jid), interests_of, asked))
+        b = SendMessageBehaviour(asked, "G_P_P_i@" + str(interests_of))
+        self.add_behaviour(b)
         # TODO send
 
     def generate_information_about_attitude(self):

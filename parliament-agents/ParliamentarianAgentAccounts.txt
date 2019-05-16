@@ -1,2 +1,3 @@
 ParliamentarianAgent1@jabbim.pl parAGH1
 ParliamentarianAgent2@jabbim.pl parAGH2
+ParliamentarianAgent3@jabbim.pl parAGH3

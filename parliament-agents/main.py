@@ -32,6 +32,8 @@ class Simulation:
 
     def __create_parliamentarian_agents_from_file(self, file_name):
         self.agents = []
+        self.agent_id_to_address = {}
+        self.agent_address_to_id = {}
         with open(file_name) as f:
             content = f.readlines()
             for line in content:
@@ -46,13 +48,17 @@ class Simulation:
                 agent.web.start(hostname="127.0.0.1", port=str(10000 + agent.id))
                 agent.receive_message_behaviour()
                 self.agents.append(agent)
+                self.agent_address_to_id[line[0].casefold()] = agent.id
+                self.agent_id_to_address[agent.id] = line[0].casefold() 
                 self.votingSystem.voters[line[0].casefold()] = VoterDescription(agent.jid, strength)
                 self.europeanParliament.parliamentarianAgentsJIDs.append(agent.jid)
                 future.result()
         for agent in self.agents:
             agent.voters = {}
             for name, voter in self.votingSystem.voters.items():
-                agent.voters[name] = VoterDescription(voter.jid, voter.strength)
+                agent.voters_id_to_address = self.agent_id_to_address
+                agent.voters_address_to_id = self.agent_address_to_id
+                agent.voters[self.agent_address_to_id[name]] = VoterDescription(voter.jid, voter.strength)
 
     def __create_european_parliament_agent(self):
         # TODO Load (now random state)

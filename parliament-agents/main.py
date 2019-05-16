@@ -3,6 +3,7 @@ from agents.votingSystemAgent import VotingSystemAgent
 from agents.europeanParliamentAgent import EuropeanParliamentAgent
 from interest import InterestArea
 from interest import Interest
+from state import UnionState
 from random import randint
 from statute import Statute
 
@@ -54,7 +55,7 @@ class Simulation:
         for interestArea in self.interestsAreas:
             state[interestArea] = randint(1, 20)
         self.europeanParliament = EuropeanParliamentAgent("EuropeanParliamentAgent@jabbim.pl", "parlAGH123",
-                                                          "votingSystem@jabbim.pl", state)
+                                                          "votingSystem@jabbim.pl", UnionState(state))
         self.europeanParliament.web.start(hostname="127.0.0.1", port="30000")
         future = self.europeanParliament.start()
         self.europeanParliament.receive_message_behaviour()

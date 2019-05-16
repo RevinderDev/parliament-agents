@@ -3,6 +3,7 @@ from .commonBehaviours import ReceiveBehaviour
 from .commonBehaviours import SendMessageBehaviour
 from spade.template import Template
 from statute import Statute
+from state import UnionState
 
 
 class EuropeanParliamentAgent(Agent):
@@ -35,19 +36,19 @@ class EuropeanParliamentAgent(Agent):
         self.messageReaction[msg_code](msg)
 
     def set_current_state(self, state):
-        self.currentState = state
+        self.currentState.state = state
         print("\tNew state: ", str(state), "\n")
 
     def calculate_state_after_approval(self, statute):
         self.stateAfterApproval = {}
-        for interestArea in self.currentState:
+        for interestArea in self.currentState.state:
             if interestArea in statute.interests:
                 self.stateAfterApproval[interestArea] = \
-                    (self.currentState[interestArea] + statute.interests[interestArea].attitude * statute.interests[interestArea].strength)/ \
+                    (self.currentState.state[interestArea] + statute.interests[interestArea].attitude * statute.interests[interestArea].strength)/ \
                     (1 + statute.interests[interestArea].strength)
-                print(self.stateAfterApproval[interestArea], self.currentState[interestArea], statute.interests[interestArea])
             else:
-                self.stateAfterApproval[interestArea] = self.currentState[interestArea]
+                self.stateAfterApproval[interestArea] = self.currentState.state[interestArea]
+        self.stateAfterApproval = UnionState(self.stateAfterApproval)
         print("\tState after approval: " + str(self.stateAfterApproval))
 
     def process_current_state(self, msg):

@@ -3,6 +3,7 @@ from .commonBehaviours import ReceiveBehaviour
 from .commonBehaviours import SendMessageBehaviour
 from spade.template import Template
 from random import randint
+from math import sqrt
 
 
 class ParliamentarianAgent(Agent):
@@ -136,3 +137,10 @@ class ParliamentarianAgent(Agent):
         print("\tVote: " + str(vote))
         b = SendMessageBehaviour(self.votingSystemId, "I_P_V_v@" + str(vote))
         self.add_behaviour(b)
+
+    def calculate_distance_to_union_state(self, dict_of_interest, state):
+        d = 0
+        for area, i in dict_of_interest.items():
+            v = state.state[area]
+            d += (v - i.attitude) * (v - i.attitude) * i.strength
+        return sqrt(d)

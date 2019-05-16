@@ -4,14 +4,16 @@ from .commonBehaviours import SendMessageBehaviour
 from spade.template import Template
 from random import randint
 from math import sqrt
+from state import UnionState
 
 
 class ParliamentarianAgent(Agent):
     id_count = 0
 
-    def __init__(self, jid, password, voting_system_id, interests):
+    def __init__(self, jid, password, voting_system_id, europeanParliamentId, interests):
         super().__init__(jid, password)
         self.votingSystemId = voting_system_id
+        self.europeanParliamentId = europeanParliamentId
         self.interests = interests
         self.id = self.__class__.id_count
         self.__class__.id_count += 1
@@ -30,6 +32,7 @@ class ParliamentarianAgent(Agent):
             "I_V_P_sv": self.process_start_voting,
             "I_V_P_ev": self.process_end_voting
         }
+        self.parliamentarianAgentsJIDs = []
 
     async def setup(self):
         print("{} ParliamentarianAgent setup".format(str(self.jid)))
@@ -73,11 +76,15 @@ class ParliamentarianAgent(Agent):
 
     def process_current_state(self, msg):
         print("{} Process - current state".format(str(self.jid)))
-        # TODO analyze information received
+        self.currentUnionState = UnionState.str_to_state(msg.body.split("@")[1])
+        if self.unionStateAfterApproval is not None:
+            self.generate_submit_vote()
 
     def process_current_state_after_approval(self, msg):
         print("{} Process - state after approval".format(str(self.jid)))
-        # TODO analyze information received
+        self.unionStateAfterApproval = UnionState.str_to_state(msg.body.split("@")[1])
+        if self.currentUnionState is not None:
+            self.generate_submit_vote()
 
     def process_current_statute(self, msg):
         print("{} Process - current statute".format(str(self.jid)))
@@ -89,7 +96,20 @@ class ParliamentarianAgent(Agent):
     def process_start_voting(self, msg):
         print("{} Process - start voting".format(str(self.jid)))
         # TODO generate some actions to create coalition
-        self.generate_submit_vote()
+        self.currentUnionState = None
+        self.unionStateAfterApproval = None
+        self.generate_get_current_state()
+        self.generate_get_state_after_approval()
+
+    def generate_get_current_state(self):
+        print("{} Generate - get current Union state".format(str(self.jid)))
+        b = SendMessageBehaviour(self.europeanParliamentId, "G_P_E_s@")
+        self.add_behaviour(b)
+
+    def generate_get_state_after_approval(self):
+        print("{} Generate - get current Union state after approval".format(str(self.jid)))
+        b = SendMessageBehaviour(self.europeanParliamentId, "G_P_E_as@")
+        self.add_behaviour(b)
 
     def process_end_voting(self, msg):
         print("{} Process - end voting".format(str(self.jid)))
@@ -133,7 +153,12 @@ class ParliamentarianAgent(Agent):
 
     def generate_submit_vote(self):
         print("{} Generate - submit vote".format(str(self.jid)))
-        vote = randint(0, 1)  # TODO Decide how to vote (now only random)
+        currentDist = self.calculate_distance_to_union_state(self.interests, self.currentUnionState)
+        afterApprovalDist = self.calculate_distance_to_union_state(self.interests, self.unionStateAfterApproval)
+        vote = 0
+        print("{} currentDist {}; afterApprovalDist {}".format(str(self.jid), currentDist, afterApprovalDist))
+        if currentDist > afterApprovalDist:
+            vote = 1  # TODO Decide how to vote (now only random)
         print("\tVote: " + str(vote))
         b = SendMessageBehaviour(self.votingSystemId, "I_P_V_v@" + str(vote))
         self.add_behaviour(b)

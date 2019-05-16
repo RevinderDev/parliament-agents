@@ -40,7 +40,7 @@ class Simulation:
                 for interestArea in self.interestsAreas:
                     interests[interestArea] = Interest(interestArea.name, randint(1, 20), randint(1, 5))
                 line = line.rstrip().split(" ")
-                agent = ParliamentarianAgent(line[0], line[1], "votingSystem@jabbim.pl", interests)
+                agent = ParliamentarianAgent(line[0], line[1], "votingSystem@jabbim.pl", "EuropeanParliamentAgent@jabbim.pl", interests)
                 future = agent.start()
                 agent.web.start(hostname="127.0.0.1", port=str(10000 + agent.id))
                 agent.receive_message_behaviour()
@@ -48,6 +48,9 @@ class Simulation:
                 self.votingSystem.parliamentarianAgentsJIDs.append(agent.jid)
                 self.europeanParliament.parliamentarianAgentsJIDs.append(agent.jid)
                 future.result()
+        parliamentarianAgentsJIDs = [agent.jid for agent in self.agents]
+        for agent in self.agents:
+            agent.parliamentarianAgentsJIDs = parliamentarianAgentsJIDs
 
     def __create_european_parliament_agent(self):
         # TODO Load (now random state)

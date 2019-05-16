@@ -4,17 +4,18 @@ from .commonBehaviours import SendMessageBehaviour
 from spade.template import Template
 from random import randint
 from math import sqrt
-from state import UnionState
+from state import UnionState, VoterDescription
 
 
 class ParliamentarianAgent(Agent):
     id_count = 0
 
-    def __init__(self, jid, password, voting_system_id, europeanParliamentId, interests):
+    def __init__(self, jid, password, voting_system_id, europeanParliamentId, interests, strength):
         super().__init__(jid, password)
         self.votingSystemId = voting_system_id
         self.europeanParliamentId = europeanParliamentId
         self.interests = interests
+        self.strength = strength
         self.id = self.__class__.id_count
         self.__class__.id_count += 1
         self.messageReaction = {
@@ -32,7 +33,7 @@ class ParliamentarianAgent(Agent):
             "I_V_P_sv": self.process_start_voting,
             "I_V_P_ev": self.process_end_voting
         }
-        self.parliamentarianAgentsJIDs = []
+        self.voters = {}
 
     async def setup(self):
         print("{} ParliamentarianAgent setup".format(str(self.jid)))

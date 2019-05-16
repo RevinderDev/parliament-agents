@@ -3,6 +3,8 @@ from spade.template import Template
 
 from agents.commonBehaviours import ReceiveBehaviour
 from .commonBehaviours import SendMessageBehaviour
+from state import VoterDescription
+from aioxmpp import JID
 
 
 class VotingSystemAgent(Agent):
@@ -11,7 +13,7 @@ class VotingSystemAgent(Agent):
 
     def __init__(self, jid, password, european_parliament_jid):
         super().__init__(jid, password)
-        self.parliamentarianAgentsJIDs = []
+        self.voters = {}
         self.europeanParliamentJID = european_parliament_jid
         self.currentStatute = None
         self.votes = {}
@@ -37,7 +39,7 @@ class VotingSystemAgent(Agent):
 
     def send_message(self, recipient, message):
         if recipient == "parliamentarians":
-            for jid in self.parliamentarianAgentsJIDs:
+            for jid in self.voters:
                 msg_behaviour = SendMessageBehaviour(jid, message)
                 self.add_behaviour(msg_behaviour)
         else:
@@ -55,8 +57,8 @@ class VotingSystemAgent(Agent):
     def process_submit_vote(self, msg):
         print("{} Process - actualize vote".format(str(self.jid)))
         print("\tNew vote: : {} - {}".format(str(msg.sender), str(msg.body.split("@")[1])))
-        self.votes[str(msg.sender)] = int(str(msg.body).split("@")[1])
-        if len(self.votes) == len(self.parliamentarianAgentsJIDs):
+        self.votes[str(msg.sender).casefold()] = int(str(msg.body).split("@")[1]) * self.voters[str(msg.sender).casefold()].strength
+        if len(self.votes) == len(self.voters):
             self.generate_end_voting()
 
     def generate_current_statute(self, sender):
@@ -81,8 +83,9 @@ class VotingSystemAgent(Agent):
         print("{} Generate - end voting".format(str(self.jid)))
         self.send_message(recipient="parliamentarians", message="I_V_P_ev")
         votes_summary = sum(self.votes.values())
-        print("\tVotes summary: {}/{}".format(str(votes_summary), str(len(self.parliamentarianAgentsJIDs))))
-        if votes_summary >= len(self.parliamentarianAgentsJIDs)/2:
+        all_voters_strength = sum([v.strength for v in self.voters.values()])
+        print("\tVotes summary: {}/{}".format(str(votes_summary), str(all_voters_strength)))
+        if votes_summary >= all_voters_strength/2:
             self.generate_apply_statue()
 
     def generate_apply_statue(self):

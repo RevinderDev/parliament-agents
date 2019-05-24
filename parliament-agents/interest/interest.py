@@ -14,4 +14,4 @@ class Interest:
     @staticmethod
     def str_to_interest(string):
         split = string.split("= ")
-        return Interest(split[1].split(",")[0], int(split[2].split(",")[0]), int(split[3]))
+        return Interest(split[1].split(",")[0], float(split[2].split(",")[0]), float(split[3]))

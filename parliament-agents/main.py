@@ -6,6 +6,7 @@ from interest import Interest
 from state import UnionState, VoterDescription
 from random import randint
 from statute import Statute
+import json
 
 
 class Simulation:
@@ -16,11 +17,11 @@ class Simulation:
         self.europeanParliament = None
         self.statute = None
 
-    def setup(self, file_name_interests_areas, file_name_agents_accounts):
+    def setup(self, file_name_interests_areas, file_name_agents_accounts, file_name_agents_resource):
         simulation.__load_interests_areas_from_file(file_name_interests_areas)
         simulation.__create_european_parliament_agent()
         simulation.__create_voting_system_agent()
-        simulation.__create_parliamentarian_agents_from_file(file_name_agents_accounts)
+        simulation.__create_parliamentarian_agents_from_file(file_name_agents_accounts, file_name_agents_resource)
 
     def __load_interests_areas_from_file(self, file_name):
         self.interestsAreas = []
@@ -30,35 +31,39 @@ class Simulation:
                 line = line.rstrip().split("@")
                 self.interestsAreas.append(InterestArea(line[0], line[1], line[2]))
 
-    def __create_parliamentarian_agents_from_file(self, file_name):
+    def __create_parliamentarian_agents_from_file(self, file_name, resources):
         self.agents = []
         self.agent_id_to_address = {}
         self.agent_address_to_id = {}
         with open(file_name) as f:
-            content = f.readlines()
-            for line in content:
-                interests = {}
-                # TODO Load (now random interests)
-                for interestArea in self.interestsAreas:
-                    interests[interestArea] = Interest(interestArea.name, randint(1, 20), randint(1, 5))
-                strength = randint(1, 2) # number of voters in political group
-                line = line.rstrip().split(" ")
-                agent = ParliamentarianAgent(line[0], line[1], "votingSystem@jabbim.pl", "EuropeanParliamentAgent@jabbim.pl", interests, strength)
-                future = agent.start()
-                agent.web.start(hostname="127.0.0.1", port=str(10000 + agent.id))
-                agent.receive_message_behaviour()
-                self.agents.append(agent)
-                self.agent_address_to_id[line[0].casefold()] = agent.id
-                self.agent_id_to_address[agent.id] = line[0].casefold() 
-                self.votingSystem.voters[line[0].casefold()] = VoterDescription(agent.jid, strength)
-                self.europeanParliament.parliamentarianAgentsJIDs.append(agent.jid)
-                future.result()
+            with open(resources) as r:
+                data = json.load(r)
+                content = f.readlines()
+                for i, line in enumerate(content):
+                    interests = {}
+                    # TODO Load (now random interests)
+                    for interest in data[i]['interests']:
+                        interestArea = [inte for inte in self.interestsAreas if inte.name == interest['interestArea']]
+                        interests[interestArea[0]] = Interest(interestArea[0].name, interest['attitude'], interest['strength'])
+                    strength = data[i]['size'] # number of voters in political group
+                    name = data[i]['name']
+                    line = line.rstrip().split(" ")
+                    agent = ParliamentarianAgent(line[0], line[1], "votingSystem@jabbim.pl", "EuropeanParliamentAgent@jabbim.pl", interests, strength, name)
+                    future = agent.start()
+                    agent.web.start(hostname="127.0.0.1", port=str(10000 + agent.id))
+                    agent.receive_message_behaviour()
+                    self.agents.append(agent)
+                    self.agent_address_to_id[line[0].casefold()] = agent.id
+                    self.agent_id_to_address[agent.id] = line[0].casefold() 
+                    self.votingSystem.voters[line[0].casefold()] = VoterDescription(agent.jid, strength, name)
+                    self.europeanParliament.parliamentarianAgentsJIDs.append(agent.jid)
+                    future.result()
         for agent in self.agents:
             agent.voters = {}
             for name, voter in self.votingSystem.voters.items():
                 agent.voters_id_to_address = self.agent_id_to_address
                 agent.voters_address_to_id = self.agent_address_to_id
-                agent.voters[self.agent_address_to_id[name]] = VoterDescription(voter.jid, voter.strength)
+                agent.voters[self.agent_address_to_id[name]] = VoterDescription(voter.jid, voter.strength, voter.name)
 
     def __create_european_parliament_agent(self):
         # TODO Load (now random state)
@@ -91,6 +96,6 @@ class Simulation:
 
 if __name__ == '__main__':
     simulation = Simulation()
-    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccounts.txt")
+    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccounts.txt", "resources/ParlimentParties.json")
     simulation.start_voting(None)
 

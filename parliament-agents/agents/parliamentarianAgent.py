@@ -11,12 +11,13 @@ from .parliamentarianBehaviours import VoteAfterTime
 class ParliamentarianAgent(Agent):
     id_count = 0
 
-    def __init__(self, jid, password, voting_system_id, europeanParliamentId, interests, strength):
+    def __init__(self, jid, password, voting_system_id, europeanParliamentId, interests, strength, name):
         super().__init__(jid, password)
         self.votingSystemId = voting_system_id
         self.europeanParliamentId = europeanParliamentId
         self.interests = interests
         self.strength = strength
+        self.party_name = name
         self.id = self.__class__.id_count
         self.__class__.id_count += 1
         self.messageReaction = {

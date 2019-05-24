@@ -4,9 +4,9 @@ from .commonBehaviours import SendMessageBehaviour
 from spade.template import Template
 from random import randint
 from math import sqrt
-from state import UnionState, VoterDescription
+from state import UnionState, VoterDescription, Coalition
 from interest import Interest, InterestArea
-
+from .parliamentarianBehaviours import VoteAfterTime
 
 class ParliamentarianAgent(Agent):
     id_count = 0
@@ -35,6 +35,9 @@ class ParliamentarianAgent(Agent):
             "I_V_P_ev": self.process_end_voting
         }
         self.voters = {}
+        # Agent must be interested in voting more then that to make propositions
+        self.minimal_interest = 3
+
 
     async def setup(self):
         print("{} ParliamentarianAgent setup".format(str(self.jid)))
@@ -42,6 +45,12 @@ class ParliamentarianAgent(Agent):
 
     def receive_message_behaviour(self):
         b = ReceiveBehaviour()
+        template = Template()
+        template.set_metadata("performative", "inform")
+        self.add_behaviour(b, template)
+
+    def vote_after_time_behaviour(self):
+        b = VoteAfterTime()
         template = Template()
         template.set_metadata("performative", "inform")
         self.add_behaviour(b, template)
@@ -60,7 +69,6 @@ class ParliamentarianAgent(Agent):
             response += " ".join([str(i) for k, i in self.voters[interests_of].interests.items()])
         b = SendMessageBehaviour(msg.sender, response)
         self.add_behaviour(b)
-        # TODO analyze information received
 
     def process_information_about_attitude(self, msg):
         print("{} Process - attitude".format(str(self.jid)))
@@ -81,27 +89,32 @@ class ParliamentarianAgent(Agent):
 
     def process_coalition_proposition(self, msg):
         print("{} Process - coalition proposition".format(str(self.jid)))
-        # TODO analyze proposition and send response
+        other_id = self.voters_address_to_id[str(msg.sender).casefold()]
+        args = msg.body.split("@")
+        vote = args[1]
+        debt = args[2]
+        self.other_coalitions[other_id] = Coalition(int(vote), float(debt), other_id, self.id, False)
 
     def process_coalition_acceptation(self, msg):
         print("{} Process - coalition acceptation".format(str(self.jid)))
-        # TODO analyze information received
+        other_id = self.voters_address_to_id[str(msg.sender).casefold()]
+        self.my_coalitions[other_id].responded = True
+        self.my_coalitions[other_id].accept = True
+        self.voters[other_id].debt -= self.my_coalitions[other_id].debt
 
     def process_coalition_refusal(self, msg):
         print("{} Process - coalition refusal".format(str(self.jid)))
-        # TODO analyze information received
+        other_id = self.voters_address_to_id[str(msg.sender).casefold()]
+        self.my_coalitions[other_id].responded = True
+        self.my_coalitions[other_id].accept = False
 
     def process_current_state(self, msg):
         print("{} Process - current state".format(str(self.jid)))
         self.currentUnionState = UnionState.str_to_state(msg.body.split("@")[1])
-        if self.unionStateAfterApproval is not None:
-            self.generate_submit_vote()
 
     def process_current_state_after_approval(self, msg):
         print("{} Process - state after approval".format(str(self.jid)))
         self.unionStateAfterApproval = UnionState.str_to_state(msg.body.split("@")[1])
-        if self.currentUnionState is not None:
-            self.generate_submit_vote()
 
     def process_current_statute(self, msg):
         print("{} Process - current statute".format(str(self.jid)))
@@ -115,11 +128,17 @@ class ParliamentarianAgent(Agent):
         # TODO generate some actions to create coalition
         self.currentUnionState = None
         self.unionStateAfterApproval = None
+        self.interest_in_approve = None
+        self.all_data = False
+        self.other_coalitions = {}
+        self.my_coalitions = {}
+        self.vote = None
         self.generate_get_current_state()
         self.generate_get_state_after_approval()
         for id, v in self.voters.items():
             if len(v.interests) == 0 and id != self.id:
                 self.generate_information_about_interests(self.voters_id_to_address[id], id)
+        self.vote_after_time_behaviour()
 
     def generate_get_current_state(self):
         print("{} Generate - get current Union state".format(str(self.jid)))
@@ -139,31 +158,31 @@ class ParliamentarianAgent(Agent):
         print("{} Generate - interests of {}, asked {}".format(str(self.jid), interests_of, asked))
         b = SendMessageBehaviour(asked, "G_P_P_i@" + str(interests_of))
         self.add_behaviour(b)
-        # TODO send
 
     def generate_information_about_attitude(self):
         print("{} Generate - attitude".format(str(self.jid)))
         # TODO send
 
-    def generate_coalition_proposition(self):
+    def generate_coalition_proposition(self, coalition):
         print("{} Generate Coalition - propose".format(str(self.jid)))
-        # TODO send
+        self.my_coalitions[coalition.reciver] = coalition
+        b = SendMessageBehaviour(self.voters_id_to_address[coalition.reciver], "S_pc@" + str(coalition.vote) + "@" + str(coalition.debt))
+        self.add_behaviour(b)
 
-    def generate_coalition_acceptation(self):
+    def generate_coalition_acceptation(self, coalition):
         print("{} Generate Coalition - accept".format(str(self.jid)))
-        # TODO send
+        self.other_coalitions[coalition.sender].responded = True
+        self.other_coalitions[coalition.sender].accept = True
+        self.voters[coalition.sender].debt += coalition.debt
+        b = SendMessageBehaviour(self.voters_id_to_address[coalition.sender], "S_ac@")
+        self.add_behaviour(b)
 
-    def generate_coalition_refusal(self):
+    def generate_coalition_refusal(self, coalition):
         print("{} Generate Coalition - reject".format(str(self.jid)))
-        # TODO send
-
-    def generate_current_state(self):
-        print("{} Generate - current state".format(str(self.jid)))
-        # TODO send
-
-    def generate_current_state_after_approval(self):
-        print("{} Generate - state after approval".format(str(self.jid)))
-        # TODO send
+        self.other_coalitions[coalition.sender].responded = True
+        self.other_coalitions[coalition.sender].accept = False
+        b = SendMessageBehaviour(self.voters_id_to_address[coalition.sender], "S_rc@")
+        self.add_behaviour(b)
 
     def generate_current_statute(self):
         print("{} Generate - current statute".format(str(self.jid)))
@@ -175,15 +194,193 @@ class ParliamentarianAgent(Agent):
 
     def generate_submit_vote(self):
         print("{} Generate - submit vote".format(str(self.jid)))
-        currentDist = self.calculate_distance_to_union_state(self.interests, self.currentUnionState)
-        afterApprovalDist = self.calculate_distance_to_union_state(self.interests, self.unionStateAfterApproval)
-        vote = 0
-        print("{} currentDist {}; afterApprovalDist {}".format(str(self.jid), currentDist, afterApprovalDist))
-        if currentDist > afterApprovalDist:
-            vote = 1  # TODO Decide how to vote (now only random)
-        print("\tVote: " + str(vote))
-        b = SendMessageBehaviour(self.votingSystemId, "I_P_V_v@" + str(vote))
+        print("\tVote: " + str(self.vote))
+        b = SendMessageBehaviour(self.votingSystemId, "I_P_V_v@" + str(self.vote))
         self.add_behaviour(b)
+
+    def has_all_data(self):
+        if self.all_data:
+            return True
+        if self.currentUnionState is None:
+            print("{} Wait for union state".format(str(self.jid)))
+            return False
+        if self.unionStateAfterApproval is None:
+            print("{} Wait for union state after approval".format(str(self.jid)))
+            return False
+        if self.interest_in_approve is None:
+            currentDist = self.calculate_distance_to_union_state(self.interests, self.currentUnionState)
+            afterApprovalDist = self.calculate_distance_to_union_state(self.interests, self.unionStateAfterApproval)
+            print("{} currentDist {}; afterApprovalDist {}".format(str(self.jid), currentDist, afterApprovalDist))
+            self.interest_in_approve = {}
+            self.interest_in_approve[self.id] = currentDist - afterApprovalDist
+            print("{} interest in approve {}".format(str(self.jid), self.interest_in_approve[self.id]))
+        for id, v in self.voters.items():
+            if len(v.interests) == 0 and id != self.id:
+                print("{} Wait for interest of {}".format(str(self.jid), id))
+                return False
+        for id, v in self.voters.items():
+            if id == self.id:
+                continue
+            currentDist = self.calculate_distance_to_union_state(v.interests, self.currentUnionState)
+            afterApprovalDist = self.calculate_distance_to_union_state(v.interests, self.unionStateAfterApproval)
+            self.interest_in_approve[id] = currentDist - afterApprovalDist
+        self.all_data = True
+        print("{} all data collected".format(str(self.jid)))
+        return True
+
+    def post_vote(self):
+        print("{} already decided {}".format(str(self.jid), self.vote))
+        for c in self.other_coalitions.values():
+            if c.responded == False:
+                if c.vote != self.vote:
+                    self.generate_coalition_refusal(c)
+                else:
+                    self.generate_coalition_acceptation(c)
+
+    def calculate_possible_votes(self, my_vote):
+        # find out who may vote as we and how many voters is there
+        votes_on_our_side = self.strength
+        all_voters_strength = 0
+        # we know how these agents are voting
+        known_vote = set()
+        known_vote.add(self.id)
+        for id, interest in self.interest_in_approve.items():
+            all_voters_strength += self.voters[id].strength
+            # add everyone who has above minimal interest in this statute
+            if abs(interest) >= self.minimal_interest and not id in known_vote:
+                if interest * my_vote[0] > 0:
+                    known_vote.add(id)
+                    votes_on_our_side += self.voters[id].strength
+        for id, c in self.my_coalitions.items():
+            # add everyone who accept our coalition
+            if c.responded and c.accept and not id in known_vote:
+                known_vote.add(id)
+                votes_on_our_side += self.voters[id].strength
+        for id, c in self.other_coalitions.items():
+            # we may immediatly accept coalitions that have same vote as us
+            if c.vote == my_vote[1] and not id in known_vote:
+                known_vote.add(id)
+                votes_on_our_side += self.voters[id].strength
+        print("{} think: votes on our side {}; all voters {}".format(str(self.jid), votes_on_our_side, all_voters_strength))
+        return (votes_on_our_side, all_voters_strength)
+
+    def choose_better_propositions(self, need_to_made_choice=False):
+        print("{} not interested in voting".format(str(self.jid)))
+        # favour our standing
+        debt = self.interest_in_approve[self.id]
+        if len(self.other_coalitions) != 0 or need_to_made_choice:
+            not_satisfying_coalitions = []
+            for c in self.other_coalitions.values():
+                vote_dir = c.vote
+                if vote_dir == 0:
+                    vote_dir = -1
+                # if debt is to small mark this as not satisfying coallition
+                print("{} coalition interest {}, debt {}".format(str(self.jid), self.voters[c.sender].strength/self.strength * self.interest_in_approve[self.id] * -vote_dir, c.debt))
+                if self.voters[c.sender].strength/self.strength * self.interest_in_approve[self.id] * -vote_dir > c.debt:
+                    not_satisfying_coalitions.append(c)
+                    continue
+                debt += c.debt * vote_dir
+                # favour when we have already debt which we should payback
+                if self.voters[c.sender].debt < 0:
+                    debt += -self.voters[c.sender].debt * vote_dir
+            # cumulative debt is big enough to choose site
+            print("{} cumulative debt {}".format(str(self.jid), debt))
+            if abs(debt) > self.strength or need_to_made_choice:
+                if debt > 0:
+                    self.vote = 1
+                else:
+                    self.vote = 0
+                self.generate_submit_vote()
+                self.post_vote()
+                return
+            else:
+                # we are not happy about current state, lets reject not satisfying coallitions and wait for better propositions
+                for c in not_satisfying_coalitions:
+                    self.generate_coalition_refusal(c)
+
+    def make_propositions(self, need_to_made_choice=False):
+        print("{} make propositions".format(str(self.jid)))
+        # decision already made, accept/reject incoming coalitions
+        if self.vote is not None:
+            self.post_vote()
+            return
+        print("{} interest in approve {}".format(str(self.jid), self.interest_in_approve))
+        budget = abs(self.interest_in_approve[self.id])
+        print("{} budget {}".format(str(self.jid), budget))
+        my_vote = (-1, 0)
+        if self.interest_in_approve[self.id] > 0:
+            my_vote = (1, 1)
+        (votes_on_our_side, all_voters_strength) = self.calculate_possible_votes(my_vote)
+        # we think we will win, make vote
+        if votes_on_our_side > all_voters_strength/2:
+            self.vote = my_vote[1]
+            self.generate_submit_vote()
+            self.post_vote()
+            return
+        # not interested in this voting, accept better coalitions
+        if abs(self.interest_in_approve[self.id]) < self.minimal_interest or need_to_made_choice:
+            self.choose_better_propositions(need_to_made_choice)
+            return
+        else:
+            list_to_convince = [(id, v) for id, v in self.interest_in_approve.items() if not id == self.id]
+            list_to_convince.sort(key=lambda x: x[1], reverse=my_vote[0] > 0)
+            possible_votes = self.strength * my_vote[0]
+            coallitions = []
+            for id, dist in list_to_convince:
+                if abs(self.interest_in_approve[self.id]) >= self.minimal_interest:
+                    if dist > 0:
+                        possible_votes += self.voters[id].strength
+                    else:
+                        possible_votes -= self.voters[id].strength
+            print("{} possible_votes {}".format(str(self.jid), possible_votes))
+            print("{} list to convince {}".format(str(self.jid), list_to_convince))
+            for id, dist in list_to_convince:
+                # base debt when proposing coalition
+                debt = self.voters[id].strength/self.strength * abs(dist)
+                # coalition propsed
+                if id in self.my_coalitions:
+                    c = self.my_coalitions[id]
+                    # already coalition proposed or respond was positive
+                    if not c.responded or (c.responded and c.accept):
+                        budget -= c.debt
+                        # changed vote in coallition
+                        if dist * my_vote[0] < 0:
+                            possible_votes = 2 * self.voters[id].strength * my_vote[0]
+                        continue
+                    # rejected proposition
+                    if c.responded and not c.accept:
+                        # try better offer
+                        new_debt = c.debt + debt * 0.2
+                        # do not offer too much
+                        if new_debt > debt * 2:
+                            continue
+                        debt = new_debt
+                # id not interested in voting or vote different then us
+                print("{} convince? dist {}; my_vote {}; as we? {}".format(str(self.jid), dist, my_vote[0], dist * my_vote[0]))
+                if abs(dist) < self.minimal_interest or dist * my_vote[0] < 0:
+                    # don't have enough votes
+                    if possible_votes * my_vote[0] < 0 or True:
+                        if debt > -self.voters[id].debt:
+                            budget -= debt
+                        coallitions.append(Coalition(my_vote[1], debt, self.id, id, False))
+                        # may change vote in coallition
+                        if dist * my_vote[0] < 0:
+                            possible_votes = 2 * self.voters[id].strength * my_vote[0]
+            # make propositions
+            print("{} budget after propositions {}".format(str(self.jid), budget))
+            if budget > 0:
+                for c in coallitions:
+                    self.generate_coalition_proposition(c)
+            else:
+                # not enough budget
+                self.choose_better_propositions(need_to_made_choice)
+
+    # This function is called when voting has not ended and no new messages are received
+    def do_vote(self):
+        if self.vote is None:
+            print("{} Nothing changed do the vote".format(str(self.jid)))
+            self.make_propositions(need_to_made_choice=True)
+            
 
     def calculate_distance_to_union_state(self, dict_of_interest, state):
         d = 0

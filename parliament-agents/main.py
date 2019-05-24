@@ -41,7 +41,7 @@ class Simulation:
                 # TODO Load (now random interests)
                 for interestArea in self.interestsAreas:
                     interests[interestArea] = Interest(interestArea.name, randint(1, 20), randint(1, 5))
-                strength = randint(1, 10) # number of voters in political group
+                strength = randint(1, 2) # number of voters in political group
                 line = line.rstrip().split(" ")
                 agent = ParliamentarianAgent(line[0], line[1], "votingSystem@jabbim.pl", "EuropeanParliamentAgent@jabbim.pl", interests, strength)
                 future = agent.start()

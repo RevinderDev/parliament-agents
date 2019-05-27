@@ -17,9 +17,9 @@ class Simulation:
         self.europeanParliament = None
         self.statute = None
 
-    def setup(self, file_name_interests_areas, file_name_agents_accounts, file_name_agents_resource):
+    def setup(self, file_name_interests_areas, file_name_agents_accounts, file_name_agents_resource, union_start_state_file):
         simulation.__load_interests_areas_from_file(file_name_interests_areas)
-        simulation.__create_european_parliament_agent()
+        simulation.__create_european_parliament_agent(union_start_state_file)
         simulation.__create_voting_system_agent()
         simulation.__create_parliamentarian_agents_from_file(file_name_agents_accounts, file_name_agents_resource)
 
@@ -65,13 +65,12 @@ class Simulation:
                 agent.voters_address_to_id = self.agent_address_to_id
                 agent.voters[self.agent_address_to_id[name]] = VoterDescription(voter.jid, voter.strength, voter.name)
 
-    def __create_european_parliament_agent(self):
-        # TODO Load (now random state)
-        state = {}
-        for interestArea in self.interestsAreas:
-            state[interestArea] = randint(1, 20)
+    def __create_european_parliament_agent(self, union_start_state_file):
+        state = None
+        with open(union_start_state_file) as d:
+            state = d.readline()
         self.europeanParliament = EuropeanParliamentAgent("EuropeanParliamentAgent@jabbim.pl", "parlAGH123",
-                                                          "votingSystem@jabbim.pl", UnionState(state))
+                                                          "votingSystem@jabbim.pl", UnionState.str_to_state(state))
         self.europeanParliament.web.start(hostname="127.0.0.1", port="30000")
         future = self.europeanParliament.start()
         self.europeanParliament.receive_message_behaviour()
@@ -96,6 +95,6 @@ class Simulation:
 
 if __name__ == '__main__':
     simulation = Simulation()
-    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccounts.txt", "resources/ParlimentParties.json")
+    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccounts.txt", "resources/ParlimentParties.json", "resources/StartUnionState")
     simulation.start_voting(None)
 

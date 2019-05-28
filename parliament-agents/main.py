@@ -93,9 +93,11 @@ class Simulation:
         statute_list = []
         for statute_json in statutes_dict:
             statute_list.append(Statute.json_to_statute(statute_json))
-        for statute in statute_list:
-            self.votingSystem.set_current_statute(statute)
-            self.votingSystem.generate_start_voting()
+        # for statute in statute_list:
+        #     self.votingSystem.set_current_statute(statute)
+        #     self.votingSystem.generate_start_voting()
+        self.votingSystem.set_current_statute(statute_list[0])
+        self.votingSystem.generate_start_voting()
 
 
 def log_redirect():

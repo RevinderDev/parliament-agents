@@ -18,8 +18,8 @@ class Statute:
         self.subject = None
 
     def __str__(self):
-        return "[STATUTE: id = " + str(self.id) + ", interests = [" + " ".join(
-            [str(i) for k, i in self.interests.items()]) + "]]"
+        return "[STATUTE: id = " + str(self.id) + ", title = " + str(self.title) + ", subject " + str(self.subject) + \
+               ", interests = [" + " ".join([str(i) for k, i in self.interests.items()]) + "]]"
 
     def __repr__(self):
         return "[STATUTE: id = " + str(self.id) + "]"
@@ -42,7 +42,7 @@ class Statute:
         interests = {}
         for s in string.split("interests = ")[1].split("INTEREST: ")[1:]:
             interest = Interest.str_to_interest(s.replace(']', '').replace('[', ''))
-            interests[InterestArea(interest.interestAreaName, "", "")] = interest
+            interests[InterestArea(interest.interestAreaName, attitude_left="", attitude_right="")] = interest
         return Statute(interests, id_set)
 
     @staticmethod

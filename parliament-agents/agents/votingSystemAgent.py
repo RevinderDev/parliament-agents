@@ -72,7 +72,9 @@ class VotingSystemAgent(Agent):
         # TODO
 
     def generate_set_current_statute(self):
-        print("{} Generate - set current statute".format(str(self.jid)))
+        print("{} Generate - set current statute - '{}' subject - {} id - {} "
+              .format(str(self.jid), str(self.currentStatute.title),
+                      str(self.currentStatute.subject), str(self.currentStatute.id)))
         self.send_message(recipient=self.europeanParliamentJID, message="I_V_E_ss@" + str(self.currentStatute))
 
     def generate_start_voting(self):
@@ -88,6 +90,7 @@ class VotingSystemAgent(Agent):
         votes_summary = sum(self.votes.values())
         all_voters_strength = sum([v.strength for v in self.voters.values()])
         print("\tVotes summary: {}/{}".format(str(votes_summary), str(all_voters_strength)))
+        print("\tHas statute been voted in? - {}".format(str(votes_summary >= all_voters_strength/2)))
         if votes_summary >= all_voters_strength/2:
             self.generate_apply_statue()
 

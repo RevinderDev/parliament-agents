@@ -5,6 +5,7 @@ from interest import InterestArea
 from interest import Interest
 from state import UnionState, VoterDescription
 from statute import Statute
+import random
 import json
 import sys
 
@@ -93,6 +94,7 @@ class Simulation:
         statute_list = []
         for statute_json in statutes_dict:
             statute_list.append(Statute.json_to_statute(statute_json))
+        random.shuffle(statute_list) # for variety in Statutes
         for statute in statute_list:
             self.votingSystem.set_current_statute(statute)
             self.votingSystem.generate_start_voting()

@@ -1,3 +1,7 @@
 ParliamentarianAgent1@jabbim.pl parAGH1
 ParliamentarianAgent2@jabbim.pl parAGH2
 ParliamentarianAgent3@jabbim.pl parAGH3
+ParliamentarianAgent4@jabbim.pl parAGH4
+ParliamentarianAgent5@jabbim.pl parAGH5
+ParliamentarianAgent6@jabbim.pl parAGH6
+ParliamentarianAgent7@jabbim.pl parAGH7

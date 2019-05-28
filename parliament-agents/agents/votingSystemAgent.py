@@ -16,6 +16,7 @@ class VotingSystemAgent(Agent):
         self.voters = {}
         self.europeanParliamentJID = european_parliament_jid
         self.currentStatute = None
+        self.isVotingFinished = False
         self.votes = {}
         self.messageReaction = {
             "G_P_V_cs": self.process_current_statue,
@@ -60,6 +61,7 @@ class VotingSystemAgent(Agent):
         self.votes[str(msg.sender).casefold()] = int(str(msg.body).split("@")[1]) * self.voters[str(msg.sender).casefold()].strength
         if len(self.votes) == len(self.voters):
             self.generate_end_voting()
+            self.isVotingFinished = True
 
     def generate_current_statute(self, sender):
         print("{} Generate - current state".format(str(self.jid)))
@@ -75,6 +77,7 @@ class VotingSystemAgent(Agent):
 
     def generate_start_voting(self):
         print("{} Generate - start voting".format(str(self.jid)))
+        self.isVotingFinished = False
         self.votes = {}
         self.generate_set_current_statute()
         self.send_message(recipient="parliamentarians", message="I_V_P_sv")

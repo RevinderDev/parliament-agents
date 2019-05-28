@@ -7,13 +7,14 @@ from state import UnionState, VoterDescription, Coalition
 from interest import Interest, InterestArea
 from .parliamentarianBehaviours import VoteAfterTime
 
+
 class ParliamentarianAgent(Agent):
     id_count = 0
 
-    def __init__(self, jid, password, voting_system_id, europeanParliamentId, interests, strength, name):
+    def __init__(self, jid, password, voting_system_id, european_parliament_id, interests, strength, name):
         super().__init__(jid, password)
         self.votingSystemId = voting_system_id
-        self.europeanParliamentId = europeanParliamentId
+        self.europeanParliamentId = european_parliament_id
         self.interests = interests
         self.strength = strength
         self.party_name = name
@@ -37,7 +38,15 @@ class ParliamentarianAgent(Agent):
         self.voters = {}
         # Agent must be interested in voting more then that to make propositions
         self.minimal_interest = 3
-
+        self.currentUnionState = None
+        self.unionStateAfterApproval = None
+        self.interestInApprove = None
+        self.all_data = False
+        self.other_coalitions = {}
+        self.my_coalitions = {}
+        self.vote = None
+        self.voters_id_to_address = None
+        self.voters_address_to_id = None
 
     async def setup(self):
         print("{} ParliamentarianAgent setup".format(str(self.jid)))
@@ -128,7 +137,7 @@ class ParliamentarianAgent(Agent):
         # TODO generate some actions to create coalition
         self.currentUnionState = None
         self.unionStateAfterApproval = None
-        self.interest_in_approve = None
+        self.interestInApprove = None
         self.all_data = False
         self.other_coalitions = {}
         self.my_coalitions = {}
@@ -207,13 +216,12 @@ class ParliamentarianAgent(Agent):
         if self.unionStateAfterApproval is None:
             print("{} Wait for union state after approval".format(str(self.jid)))
             return False
-        if self.interest_in_approve is None:
-            currentDist = self.calculate_distance_to_union_state(self.interests, self.currentUnionState)
-            afterApprovalDist = self.calculate_distance_to_union_state(self.interests, self.unionStateAfterApproval)
-            print("{} currentDist {}; afterApprovalDist {}".format(str(self.jid), currentDist, afterApprovalDist))
-            self.interest_in_approve = {}
-            self.interest_in_approve[self.id] = currentDist - afterApprovalDist
-            print("{} interest in approve {}".format(str(self.jid), self.interest_in_approve[self.id]))
+        if self.interestInApprove is None:
+            current_dist = self.calculate_distance_to_union_state(self.interests, self.currentUnionState)
+            after_approval_dist = self.calculate_distance_to_union_state(self.interests, self.unionStateAfterApproval)
+            print("{} currentDist {}; afterApprovalDist {}".format(str(self.jid), current_dist, after_approval_dist))
+            self.interestInApprove = {self.id: current_dist - after_approval_dist}
+            print("{} interest in approve {}".format(str(self.jid), self.interestInApprove[self.id]))
         for id, v in self.voters.items():
             if len(v.interests) == 0 and id != self.id:
                 print("{} Wait for interest of {}".format(str(self.jid), id))
@@ -221,9 +229,9 @@ class ParliamentarianAgent(Agent):
         for id, v in self.voters.items():
             if id == self.id:
                 continue
-            currentDist = self.calculate_distance_to_union_state(v.interests, self.currentUnionState)
-            afterApprovalDist = self.calculate_distance_to_union_state(v.interests, self.unionStateAfterApproval)
-            self.interest_in_approve[id] = currentDist - afterApprovalDist
+            current_dist = self.calculate_distance_to_union_state(v.interests, self.currentUnionState)
+            after_approval_dist = self.calculate_distance_to_union_state(v.interests, self.unionStateAfterApproval)
+            self.interestInApprove[id] = current_dist - after_approval_dist
         self.all_data = True
         print("{} all data collected".format(str(self.jid)))
         return True
@@ -231,7 +239,7 @@ class ParliamentarianAgent(Agent):
     def post_vote(self):
         print("{} already decided {}".format(str(self.jid), self.vote))
         for c in self.other_coalitions.values():
-            if c.responded == False:
+            if not c.responded:
                 if c.vote != self.vote:
                     self.generate_coalition_refusal(c)
                 else:
@@ -244,7 +252,7 @@ class ParliamentarianAgent(Agent):
         # we know how these agents are voting
         known_vote = set()
         known_vote.add(self.id)
-        for id, interest in self.interest_in_approve.items():
+        for id, interest in self.interestInApprove.items():
             all_voters_strength += self.voters[id].strength
             # add everyone who has above minimal interest in this statute
             if abs(interest) >= self.minimal_interest and not id in known_vote:
@@ -262,12 +270,12 @@ class ParliamentarianAgent(Agent):
                 known_vote.add(id)
                 votes_on_our_side += self.voters[id].strength
         print("{} think: votes on our side {}; all voters {}".format(str(self.jid), votes_on_our_side, all_voters_strength))
-        return (votes_on_our_side, all_voters_strength)
+        return votes_on_our_side, all_voters_strength
 
     def choose_better_propositions(self, need_to_made_choice=False):
         print("{} not interested in voting".format(str(self.jid)))
         # favour our standing
-        debt = self.interest_in_approve[self.id]
+        debt = self.interestInApprove[self.id]
         if len(self.other_coalitions) != 0 or need_to_made_choice:
             not_satisfying_coalitions = []
             for c in self.other_coalitions.values():
@@ -275,8 +283,8 @@ class ParliamentarianAgent(Agent):
                 if vote_dir == 0:
                     vote_dir = -1
                 # if debt is to small mark this as not satisfying coallition
-                print("{} coalition interest {}, debt {}".format(str(self.jid), self.voters[c.sender].strength/self.strength * self.interest_in_approve[self.id] * -vote_dir, c.debt))
-                if self.voters[c.sender].strength/self.strength * self.interest_in_approve[self.id] * -vote_dir > c.debt:
+                print("{} coalition interest {}, debt {}".format(str(self.jid), self.voters[c.sender].strength / self.strength * self.interestInApprove[self.id] * -vote_dir, c.debt))
+                if self.voters[c.sender].strength/self.strength * self.interestInApprove[self.id] * -vote_dir > c.debt:
                     not_satisfying_coalitions.append(c)
                     continue
                 debt += c.debt * vote_dir
@@ -294,7 +302,8 @@ class ParliamentarianAgent(Agent):
                 self.post_vote()
                 return
             else:
-                # we are not happy about current state, lets reject not satisfying coallitions and wait for better propositions
+                # we are not happy about current state, lets reject not satisfying coallitions
+                # and wait for better propositions
                 for c in not_satisfying_coalitions:
                     self.generate_coalition_refusal(c)
 
@@ -304,11 +313,11 @@ class ParliamentarianAgent(Agent):
         if self.vote is not None:
             self.post_vote()
             return
-        print("{} interest in approve {}".format(str(self.jid), self.interest_in_approve))
-        budget = abs(self.interest_in_approve[self.id])
+        print("{} interest in approve {}".format(str(self.jid), self.interestInApprove))
+        budget = abs(self.interestInApprove[self.id])
         print("{} budget {}".format(str(self.jid), budget))
         my_vote = (-1, 0)
-        if self.interest_in_approve[self.id] > 0:
+        if self.interestInApprove[self.id] > 0:
             my_vote = (1, 1)
         (votes_on_our_side, all_voters_strength) = self.calculate_possible_votes(my_vote)
         # we think we will win, make vote
@@ -318,16 +327,16 @@ class ParliamentarianAgent(Agent):
             self.post_vote()
             return
         # not interested in this voting, accept better coalitions
-        if abs(self.interest_in_approve[self.id]) < self.minimal_interest or need_to_made_choice:
+        if abs(self.interestInApprove[self.id]) < self.minimal_interest or need_to_made_choice:
             self.choose_better_propositions(need_to_made_choice)
             return
         else:
-            list_to_convince = [(id, v) for id, v in self.interest_in_approve.items() if not id == self.id]
+            list_to_convince = [(id, v) for id, v in self.interestInApprove.items() if not id == self.id]
             list_to_convince.sort(key=lambda x: x[1], reverse=my_vote[0] > 0)
             possible_votes = self.strength * my_vote[0]
             coallitions = []
             for id, dist in list_to_convince:
-                if abs(self.interest_in_approve[self.id]) >= self.minimal_interest:
+                if abs(self.interestInApprove[self.id]) >= self.minimal_interest:
                     if dist > 0:
                         possible_votes += self.voters[id].strength
                     else:
@@ -380,9 +389,9 @@ class ParliamentarianAgent(Agent):
         if self.vote is None:
             print("{} Nothing changed do the vote".format(str(self.jid)))
             self.make_propositions(need_to_made_choice=True)
-            
 
-    def calculate_distance_to_union_state(self, dict_of_interest, state):
+    @staticmethod
+    def calculate_distance_to_union_state(dict_of_interest, state):
         d = 0
         for area, i in dict_of_interest.items():
             v = state.state[area]

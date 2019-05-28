@@ -2,7 +2,6 @@ from spade.agent import Agent
 from .commonBehaviours import ReceiveBehaviour
 from .commonBehaviours import SendMessageBehaviour
 from spade.template import Template
-from random import randint
 from math import sqrt
 from state import UnionState, VoterDescription, Coalition
 from interest import Interest, InterestArea

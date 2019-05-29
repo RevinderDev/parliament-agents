@@ -16,6 +16,7 @@ class VotingSystemAgent(Agent):
         self.voters = {}
         self.europeanParliamentJID = european_parliament_jid
         self.currentStatute = None
+        self.votingResults = {}
         self.isVotingFinished = False
         self.votes = {}
         self.messageReaction = {
@@ -58,7 +59,8 @@ class VotingSystemAgent(Agent):
     def process_submit_vote(self, msg):
         print("{} Process - actualize vote".format(str(self.jid)))
         print("\tNew vote: : {} - {}".format(str(msg.sender), str(msg.body.split("@")[1])))
-        self.votes[str(msg.sender).casefold()] = int(str(msg.body).split("@")[1]) * self.voters[str(msg.sender).casefold()].strength
+        self.votes[str(msg.sender).casefold()] = int(str(msg.body).split("@")[1]) * self.voters[
+            str(msg.sender).casefold()].strength
         if len(self.votes) == len(self.voters):
             self.generate_end_voting()
             self.isVotingFinished = True
@@ -90,8 +92,12 @@ class VotingSystemAgent(Agent):
         votes_summary = sum(self.votes.values())
         all_voters_strength = sum([v.strength for v in self.voters.values()])
         print("\tVotes summary: {}/{}".format(str(votes_summary), str(all_voters_strength)))
-        print("\tHas statute been voted in? - {}".format(str(votes_summary >= all_voters_strength/2)))
-        if votes_summary >= all_voters_strength/2:
+        print("\tHas statute been voted in? - {}".format(str(votes_summary >= all_voters_strength / 2)))
+        statute_dict = self.currentStatute.statute_to_dict()
+        statute_dict['votes'] = "{}/{}".format(str(votes_summary), str(all_voters_strength))
+        statute_dict['hasPassed'] = "{}".format(str(votes_summary >= all_voters_strength / 2))
+        self.votingResults['Statute ' + str(statute_dict['id'])] = statute_dict
+        if votes_summary >= all_voters_strength / 2:
             self.generate_apply_statue()
 
     def generate_apply_statue(self):

@@ -93,8 +93,7 @@ class Simulation:
         statute_list = []
         for statute_json in statutes_dict:
             statute_list.append(Statute.json_to_statute(statute_json))
-        random.shuffle(statute_list)  # for variety in Statutes
-        for statute in statute_list[0:6]:
+        for statute in reversed(statute_list):
             self.votingSystem.set_current_statute(statute)
             self.votingSystem.generate_start_voting()
             while not self.votingSystem.isVotingFinished:

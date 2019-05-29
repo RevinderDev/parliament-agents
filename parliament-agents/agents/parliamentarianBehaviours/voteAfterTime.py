@@ -14,7 +14,7 @@ class VoteAfterTime(CyclicBehaviour):
             if self.counter < 10:
                 if self.agent.has_all_data():
                     self.counter += 1
-                    self.agent.make_propositions()
+                    self.agent.make_decisions()
             else:
                 self.agent.do_vote()
                 self.kill()

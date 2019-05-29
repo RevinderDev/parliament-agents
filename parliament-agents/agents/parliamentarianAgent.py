@@ -272,6 +272,16 @@ class ParliamentarianAgent(Agent):
         print("{} think: votes on our side {}; all voters {}".format(str(self.jid), votes_on_our_side, all_voters_strength))
         return votes_on_our_side, all_voters_strength
 
+    def calculate_possible_votes_to_convince(self, my_vote, list_to_convince):
+        possible_votes = self.strength * my_vote[0]
+        for id, dist in list_to_convince:
+            if abs(self.interestInApprove[self.id]) >= self.minimal_interest:
+                if dist > 0:
+                    possible_votes += self.voters[id].strength
+                else:
+                    possible_votes -= self.voters[id].strength
+        return possible_votes
+
     def choose_better_propositions(self, need_to_made_choice=False):
         print("{} not interested in voting".format(str(self.jid)))
         # favour our standing
@@ -307,88 +317,85 @@ class ParliamentarianAgent(Agent):
                 for c in not_satisfying_coalitions:
                     self.generate_coalition_refusal(c)
 
-    def make_propositions(self, need_to_made_choice=False):
+    def check_coalitions(self, budget, my_vote, possible_votes, coalitions, list_to_convince):
+        for id, dist in list_to_convince:
+            # base debt when proposing coalition
+            debt = self.voters[id].strength / self.strength * abs(dist)
+            # coalition propsed
+            if id in self.my_coalitions:
+                c = self.my_coalitions[id]
+                # already coalition proposed or respond was positive
+                if not c.responded or (c.responded and c.accept):
+                    budget -= c.debt
+                    # changed vote in coallition
+                    if dist * my_vote[0] < 0:
+                        possible_votes = 2 * self.voters[id].strength * my_vote[0]
+                    continue
+                # rejected proposition
+                if c.responded and not c.accept:
+                    # try better offer
+                    new_debt = c.debt + debt * 0.2
+                    # do not offer too much
+                    if new_debt > debt * 2:
+                        continue
+                    debt = new_debt
+            # id not interested in voting or vote different then us
+            print("{} convince? dist {}; my_vote {}; as we? {}".format(str(self.jid), dist, my_vote[0], dist * my_vote[0]))
+            if abs(dist) < self.minimal_interest or dist * my_vote[0] < 0:
+                # don't have enough votes
+                if possible_votes * my_vote[0] < 0 or True:
+                    if debt > -self.voters[id].debt:
+                        budget -= debt
+                    coalitions.append(Coalition(my_vote[1], debt, self.id, id, False))
+                    # may change vote in coallition
+                    if dist * my_vote[0] < 0:
+                        possible_votes = 2 * self.voters[id].strength * my_vote[0]
+
+    def make_propositions(self, budget, coalitions, need_to_made_choice):
+        print("{} budget after propositions {}".format(str(self.jid), budget))
+        if budget > 0:
+            for c in coalitions:
+                self.generate_coalition_proposition(c)
+        else:
+            # not enough budget
+            self.choose_better_propositions(need_to_made_choice)
+
+    def make_decisions(self, need_to_made_choice=False):
         print("{} make propositions".format(str(self.jid)))
         # decision already made, accept/reject incoming coalitions
         if self.vote is not None:
             self.post_vote()
             return
-        print("{} interest in approve {}".format(str(self.jid), self.interestInApprove))
         budget = abs(self.interestInApprove[self.id])
-        print("{} budget {}".format(str(self.jid), budget))
-        my_vote = (-1, 0)
-        if self.interestInApprove[self.id] > 0:
-            my_vote = (1, 1)
+        my_vote = (1, 1) if self.interestInApprove[self.id] > 0 else (-1, 0)
         (votes_on_our_side, all_voters_strength) = self.calculate_possible_votes(my_vote)
+        print("{} budget {}".format(str(self.jid), budget))
+        print("{} interest in approve {}".format(str(self.jid), self.interestInApprove))
         # we think we will win, make vote
-        if votes_on_our_side > all_voters_strength/2:
+        if votes_on_our_side > all_voters_strength / 2:
             self.vote = my_vote[1]
             self.generate_submit_vote()
             self.post_vote()
             return
         # not interested in this voting, accept better coalitions
-        if abs(self.interestInApprove[self.id]) < self.minimal_interest or need_to_made_choice:
+        if budget < self.minimal_interest or need_to_made_choice:
             self.choose_better_propositions(need_to_made_choice)
             return
         else:
             list_to_convince = [(id, v) for id, v in self.interestInApprove.items() if not id == self.id]
             list_to_convince.sort(key=lambda x: x[1], reverse=my_vote[0] > 0)
-            possible_votes = self.strength * my_vote[0]
-            coallitions = []
-            for id, dist in list_to_convince:
-                if abs(self.interestInApprove[self.id]) >= self.minimal_interest:
-                    if dist > 0:
-                        possible_votes += self.voters[id].strength
-                    else:
-                        possible_votes -= self.voters[id].strength
+            coalitions = []
+            possible_votes = self.calculate_possible_votes_to_convince(my_vote, list_to_convince)
             print("{} possible_votes {}".format(str(self.jid), possible_votes))
             print("{} list to convince {}".format(str(self.jid), list_to_convince))
-            for id, dist in list_to_convince:
-                # base debt when proposing coalition
-                debt = self.voters[id].strength/self.strength * abs(dist)
-                # coalition propsed
-                if id in self.my_coalitions:
-                    c = self.my_coalitions[id]
-                    # already coalition proposed or respond was positive
-                    if not c.responded or (c.responded and c.accept):
-                        budget -= c.debt
-                        # changed vote in coallition
-                        if dist * my_vote[0] < 0:
-                            possible_votes = 2 * self.voters[id].strength * my_vote[0]
-                        continue
-                    # rejected proposition
-                    if c.responded and not c.accept:
-                        # try better offer
-                        new_debt = c.debt + debt * 0.2
-                        # do not offer too much
-                        if new_debt > debt * 2:
-                            continue
-                        debt = new_debt
-                # id not interested in voting or vote different then us
-                print("{} convince? dist {}; my_vote {}; as we? {}".format(str(self.jid), dist, my_vote[0], dist * my_vote[0]))
-                if abs(dist) < self.minimal_interest or dist * my_vote[0] < 0:
-                    # don't have enough votes
-                    if possible_votes * my_vote[0] < 0 or True:
-                        if debt > -self.voters[id].debt:
-                            budget -= debt
-                        coallitions.append(Coalition(my_vote[1], debt, self.id, id, False))
-                        # may change vote in coallition
-                        if dist * my_vote[0] < 0:
-                            possible_votes = 2 * self.voters[id].strength * my_vote[0]
-            # make propositions
-            print("{} budget after propositions {}".format(str(self.jid), budget))
-            if budget > 0:
-                for c in coallitions:
-                    self.generate_coalition_proposition(c)
-            else:
-                # not enough budget
-                self.choose_better_propositions(need_to_made_choice)
+            self.check_coalitions(budget, my_vote, possible_votes, coalitions, list_to_convince)
+            self.make_propositions(budget, coalitions, need_to_made_choice)
 
     # This function is called when voting has not ended and no new messages are received
     def do_vote(self):
         if self.vote is None:
             print("{} Nothing changed do the vote".format(str(self.jid)))
-            self.make_propositions(need_to_made_choice=True)
+            self.make_decisions(need_to_made_choice=True)
 
     @staticmethod
     def calculate_distance_to_union_state(dict_of_interest, state):

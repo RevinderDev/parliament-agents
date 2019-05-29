@@ -15,3 +15,11 @@ class Interest:
     def str_to_interest(string):
         split = string.split("= ")
         return Interest(split[1].split(",")[0], float(split[2].split(",")[0]), float(split[3]))
+
+    def interest_to_dict(self):
+        interest_dict = {
+            "interestAreaName": self.interestAreaName,
+            "attitude": self.attitude,
+            "strength": self.strength
+        }
+        return interest_dict

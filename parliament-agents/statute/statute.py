@@ -45,6 +45,16 @@ class Statute:
             interests[InterestArea(interest.interestAreaName, attitude_left="", attitude_right="")] = interest
         return Statute(interests, id_set)
 
+    def statute_to_dict(self):
+        statute_dict = {
+            "title": self.title,
+            "id": self.id,
+            "reference": self.reference,
+            "subject": self.subject,
+            "interests": [interest.interest_to_dict() for interest in self.interests.values()]
+        }
+        return statute_dict
+
     @staticmethod
     def json_to_statute(json_dict):
         interests = {}

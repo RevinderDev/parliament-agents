@@ -43,7 +43,6 @@ class Simulation:
                 content = f.readlines()
                 for i, line in enumerate(content):
                     interests = {}
-                    # TODO Load (now random interests)
                     for interest in data[i]['interests']:
                         interestArea = [inte for inte in self.interestsAreas if inte.name == interest['interestArea']]
                         interests[interestArea[0]] = Interest(interestArea[0].name, interest['attitude'],
@@ -94,12 +93,19 @@ class Simulation:
         statute_list = []
         for statute_json in statutes_dict:
             statute_list.append(Statute.json_to_statute(statute_json))
-        random.shuffle(statute_list) # for variety in Statutes
-        for statute in statute_list:
+        random.shuffle(statute_list)  # for variety in Statutes
+        for statute in statute_list[0:6]:
             self.votingSystem.set_current_statute(statute)
             self.votingSystem.generate_start_voting()
             while not self.votingSystem.isVotingFinished:
                 continue
+
+        Simulation.__voting_results_to_file(self.votingSystem.votingResults)
+
+    @staticmethod
+    def __voting_results_to_file(voting_results):
+        with open('voting_results.json', 'w') as json_file:
+            json.dump(voting_results, json_file)
 
 
 def log_redirect():

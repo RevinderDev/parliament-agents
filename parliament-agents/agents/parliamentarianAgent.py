@@ -134,7 +134,6 @@ class ParliamentarianAgent(Agent):
 
     def process_start_voting(self, msg):
         print("{} Process - start voting".format(str(self.jid)))
-        # TODO generate some actions to create coalition
         self.currentUnionState = None
         self.unionStateAfterApproval = None
         self.interestInApprove = None

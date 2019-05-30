@@ -5,6 +5,8 @@ parties = None
 with open("../parliament-agents/resources/ParlimentParties.json") as f:
     parties = json.load(f)
 
+num = 0
+dossiers = []
 with open("dossiers") as f:
     header = {}
     for i, title in enumerate(f.readline().split("|")):
@@ -31,8 +33,10 @@ with open("dossiers") as f:
         dossier = {}
         dossier['title'] = line[0].strip()
         dossier['subject'] = line[1].strip('\"').replace("\"\"", "\"").strip()
-        dossier['reference'] = line[2].strip()
+        dossier['reference'] = str(num) + " " + line[2].strip()
         dossier['interests'] = [ {'interestArea': k, 'attitude': v[0], 'strength': v[1]} for k, v in interests.items()]
-        j = json.dumps(dossier, indent=4)
-        print(j)
+        dossiers.append(dossier)
+        num += 1
+j = json.dumps(dossiers, indent=4)
+print(j)
 

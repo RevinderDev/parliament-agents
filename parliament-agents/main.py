@@ -9,7 +9,6 @@ import random
 import json
 import sys
 
-
 class Simulation:
     def __init__(self):
         self.interestsAreas = []
@@ -50,8 +49,8 @@ class Simulation:
                     strength = data[i]['size']  # number of voters in political group
                     name = data[i]['name']
                     line = line.rstrip().split(" ")
-                    agent = ParliamentarianAgent(line[0], line[1], "votingSystem@jabbim.pl",
-                                                 "EuropeanParliamentAgent@jabbim.pl", interests, strength, name)
+                    agent = ParliamentarianAgent(line[0], line[1], "vs@localhost",
+                                                 "ep@localhost", interests, strength, name)
                     future = agent.start()
                     agent.web.start(hostname="127.0.0.1", port=str(10000 + agent.id))
                     agent.receive_message_behaviour()
@@ -72,16 +71,16 @@ class Simulation:
         state = None
         with open(union_start_state_file) as d:
             state = d.readline()
-        self.europeanParliament = EuropeanParliamentAgent("EuropeanParliamentAgent@jabbim.pl", "parlAGH123",
-                                                          "votingSystem@jabbim.pl", UnionState.str_to_state(state))
+        self.europeanParliament = EuropeanParliamentAgent("ep@localhost", "pass",
+                                                          "vs@localhost", UnionState.str_to_state(state))
         self.europeanParliament.web.start(hostname="127.0.0.1", port="30000")
         future = self.europeanParliament.start()
         self.europeanParliament.receive_message_behaviour()
         future.result()
 
     def __create_voting_system_agent(self):
-        self.votingSystem = VotingSystemAgent("votingSystem@jabbim.pl", "parlAGH123",
-                                              "EuropeanParliamentAgent@jabbim.pl")
+        self.votingSystem = VotingSystemAgent("vs@localhost", "pass",
+                                              "ep@localhost")
         self.votingSystem.web.start(hostname="127.0.0.1", port="20000")
         future = self.votingSystem.start()
         self.votingSystem.receive_message_behaviour()
@@ -104,7 +103,7 @@ class Simulation:
     @staticmethod
     def __voting_results_to_file(voting_results):
         with open('voting_results.json', 'w') as json_file:
-            json.dump(voting_results, json_file)
+            json.dump(voting_results, json_file, indent=4)
 
 
 def log_redirect():
@@ -114,6 +113,6 @@ def log_redirect():
 if __name__ == '__main__':
     # log_redirect()  # TODO: uncomment if you wish to scubadive logs
     simulation = Simulation()
-    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccounts.txt", "resources/ParlimentParties.json",
+    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccountsLocalhost.txt", "resources/ParlimentParties.json",
                      "resources/StartUnionState")
-    simulation.start_voting("resources/Statutes.json")
+    simulation.start_voting("resources/sample_200_dossiers.json")

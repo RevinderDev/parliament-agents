@@ -17,6 +17,7 @@ class VotingSystemAgent(Agent):
         self.europeanParliamentJID = european_parliament_jid
         self.currentStatute = None
         self.votingResults = {}
+        self.partiesChoices = {}
         self.isVotingFinished = False
         self.votes = {}
         self.messageReaction = {
@@ -62,6 +63,12 @@ class VotingSystemAgent(Agent):
         print("\tSubmitted votes: {} / {}".format(str(len(self.votes)), str(len(self.voters))))
         self.votes[str(msg.sender).casefold()] = int(str(msg.body).split("@")[1]) * self.voters[
             str(msg.sender).casefold()].strength
+        self.partiesChoices[self.voters[str(msg.sender).casefold()].name] = {
+            'sender id': str(msg.sender).casefold(),
+            'Submitted vote': int(str(msg.body).split("@")[1]),
+            'Strength': self.voters[str(msg.sender).casefold()].strength,
+            'Total votes': int(str(msg.body).split("@")[1]) * self.voters[str(msg.sender).casefold()].strength
+        }
         if len(self.votes) == len(self.voters):
             self.generate_end_voting()
             self.isVotingFinished = True
@@ -84,6 +91,7 @@ class VotingSystemAgent(Agent):
         print("{} Generate - start voting".format(str(self.jid)))
         self.isVotingFinished = False
         self.votes = {}
+        self.partiesChoices = {}
         self.generate_set_current_statute()
         self.send_message(recipient="parliamentarians", message="I_V_P_sv")
 
@@ -97,6 +105,7 @@ class VotingSystemAgent(Agent):
         statute_dict = self.currentStatute.statute_to_dict()
         statute_dict['votes'] = "{}/{}".format(str(votes_summary), str(all_voters_strength))
         statute_dict['hasPassed'] = "{}".format(str(votes_summary >= all_voters_strength / 2))
+        statute_dict['parties choices'] = self.partiesChoices
         self.votingResults['Statute ' + str(statute_dict['id'])] = statute_dict
         if votes_summary >= all_voters_strength / 2:
             self.generate_apply_statue()

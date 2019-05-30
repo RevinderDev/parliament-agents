@@ -53,12 +53,13 @@ class VotingSystemAgent(Agent):
         self.generate_current_statute(msg.sender)
 
     def process_past_statutes(self, msg):
-        print("{} Process- previous state".format(str(self.jid)))
+        print("{} Process - previous state".format(str(self.jid)))
         self.generate_past_statutes()
 
     def process_submit_vote(self, msg):
         print("{} Process - actualize vote".format(str(self.jid)))
-        print("\tNew vote: : {} - {}".format(str(msg.sender), str(msg.body.split("@")[1])))
+        print("\tNew vote:  {} - {}".format(str(msg.sender), str(msg.body.split("@")[1])))
+        print("\tSubmitted votes: {} / {}".format(str(len(self.votes)), str(len(self.voters))))
         self.votes[str(msg.sender).casefold()] = int(str(msg.body).split("@")[1]) * self.voters[
             str(msg.sender).casefold()].strength
         if len(self.votes) == len(self.voters):

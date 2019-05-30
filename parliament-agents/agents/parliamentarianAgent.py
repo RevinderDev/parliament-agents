@@ -173,8 +173,8 @@ class ParliamentarianAgent(Agent):
 
     def generate_coalition_proposition(self, coalition):
         print("{} Generate Coalition - propose".format(str(self.jid)))
-        self.my_coalitions[coalition.reciver] = coalition
-        b = SendMessageBehaviour(self.voters_id_to_address[coalition.reciver], "S_pc@" + str(coalition.vote) + "@" + str(coalition.debt))
+        self.my_coalitions[coalition.receiver] = coalition
+        b = SendMessageBehaviour(self.voters_id_to_address[coalition.receiver], "S_pc@" + str(coalition.vote) + "@" + str(coalition.debt))
         self.add_behaviour(b)
 
     def generate_coalition_acceptation(self, coalition):

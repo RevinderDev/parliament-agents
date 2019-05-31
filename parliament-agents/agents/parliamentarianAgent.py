@@ -37,7 +37,7 @@ class ParliamentarianAgent(Agent):
         }
         self.voters = {}
         # Agent must be interested in voting more then that to make propositions
-        self.minimal_interest = 3
+        self.minimal_interest = 1
         self.currentUnionState = None
         self.unionStateAfterApproval = None
         self.interestInApprove = None

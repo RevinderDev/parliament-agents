@@ -114,6 +114,8 @@ def log_redirect():
 if __name__ == '__main__':
     # log_redirect()  # TODO: uncomment if you wish to scubadive logs
     simulation = Simulation()
-    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccounts.txt", "resources/ParlimentParties.json",
+    simulation.setup("resources/InterestAreas.txt",
+                     "resources/ParliamentarianAgentAccounts.txt",
+                     "resources/ParliamentParties.json",
                      "resources/StartUnionState")
     simulation.start_voting("resources/Statutes.json")

@@ -2,7 +2,7 @@ import json
 
 parties = None
 
-with open("../parliament-agents/resources/ParlimentParties.json") as f:
+with open("../parliament-agents/resources/ParliamentParties.json") as f:
     parties = json.load(f)
 
 interests = {}

@@ -38,7 +38,7 @@ Should you want to change any data file names, simply edit [main.py](https://git
 ```python
 if __name__ == '__main__':
     simulation = Simulation()
-    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccounts.txt", "resources/ParlimentParties.json",
+    simulation.setup("InterestAreas.txt", "ParliamentarianAgentAccounts.txt", "resources/ParliamentParties.json",
                      "resources/StartUnionState")
     simulation.start_voting("resources/Statutes.json")
 ```

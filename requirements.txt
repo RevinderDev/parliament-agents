@@ -15,7 +15,7 @@ dnspython==1.16.0
 idna==2.8
 Jinja2==2.10.1
 jinja2-time==0.2.0
-lxml==4.3.3
+lxml==4.6.5
 MarkupSafe==1.1.1
 multidict==4.4.0
 pyasn1==0.4.5
